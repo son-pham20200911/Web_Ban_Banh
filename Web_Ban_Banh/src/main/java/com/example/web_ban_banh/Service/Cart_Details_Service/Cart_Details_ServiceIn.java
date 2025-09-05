@@ -1,0 +1,9 @@
+package com.example.web_ban_banh.Service.Cart_Details_Service;
+
+import com.example.web_ban_banh.DTO.Cart_Details_DTO.Get.Cart_DetailsDTO;
+import com.example.web_ban_banh.Entity.Cart_details;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface Cart_Details_ServiceIn {
+    public void deleteCartDetail (int id);
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Du_An_Cuoi_Khoa_VTI.iml" filepath="$PROJECT_DIR$/.idea/Du_An_Cuoi_Khoa_VTI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Web_Ban_Banh/Web_Ban_Banh.iml" filepath="$PROJECT_DIR$/Web_Ban_Banh/Web_Ban_Banh.iml" />
+    </modules>
+  </component>
+</project>
