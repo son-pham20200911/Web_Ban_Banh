@@ -194,6 +194,7 @@ public class Cart_Service implements Cart_ServiceIn {
     }
 
 
+    //Phương thức xóa Giỏ Hàng theo ID
     @Override
     @Transactional
     public void deleteCart(int id) {

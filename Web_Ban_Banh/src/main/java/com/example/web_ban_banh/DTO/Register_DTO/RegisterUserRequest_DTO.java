@@ -51,6 +51,7 @@ public class RegisterUserRequest_DTO {
     @Length(max = 500,message = "Username không được quá 500 ký tự")
     private String userName;
 
+    @NotBlank(message = "Không được để trống Password")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_])[a-zA-Z0-9!@#$%^&*()_]{8,20}$",
             message = "Password phải có 1 chữ in hoa, 1 chữ thường, 1 ký tự đặc biệt !@#$%^&*()_ và số lượng ký tự từ 8 đến 20 ký tự")
     private String password;

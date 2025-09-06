@@ -24,4 +24,6 @@ public class User_DTO {
     private Gender gender;
     private String email;
     private Role role;
+    private String userName;
+    private String password;
 }

@@ -42,18 +42,18 @@ public class Internal_Server_Error_Exception {
     }
 
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?>hadleException(Exception ex, HttpServletRequest request){
-        // Log lỗi để debug
-        log.error("Internal server error occurred: ", ex);
-        ErrorResponse error=new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Lỗi hệ thống: "+ex.getMessage(),
-                request.getRequestURI(),
-                LocalDateTime.now()
-        );
-        return ResponseEntity.status(500).body(error);
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<?>hadleException(Exception ex, HttpServletRequest request){
+//        // Log lỗi để debug
+//        log.error("Internal server error occurred: ", ex);
+//        ErrorResponse error=new ErrorResponse(
+//                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+//                "Lỗi hệ thống: "+ex.getMessage(),
+//                request.getRequestURI(),
+//                LocalDateTime.now()
+//        );
+//        return ResponseEntity.status(500).body(error);
+//    }
     //Bắt lỗi 500(lỗi bên server) và hiển thị theo dạng của class "ErrorResponse":
 
 
