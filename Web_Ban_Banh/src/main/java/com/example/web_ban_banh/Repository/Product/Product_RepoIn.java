@@ -41,4 +41,6 @@ public interface Product_RepoIn extends JpaRepository<Product,Integer> {
 
     @Query("SELECT p FROM Product p ORDER BY p.originalPrice asc ")
     public List<Product>lowPriceToHighPrice();
+
+    public List<Product>findByProductnameIn(List<String>productName);
 }

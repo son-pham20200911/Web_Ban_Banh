@@ -20,7 +20,7 @@ public class Category {
     private int id;
     @Column(name="category_name",nullable = false,length = 255)
     private String categoryName;
-    @Column(name="slug",nullable = false,length = 500,unique = true)
+    @Column(name="slug",length = 500,unique = true)
     private String slug;
 
     @OneToMany(mappedBy = "category",cascade = {CascadeType.MERGE,CascadeType.PERSIST,CascadeType.REFRESH},fetch = FetchType.LAZY)
