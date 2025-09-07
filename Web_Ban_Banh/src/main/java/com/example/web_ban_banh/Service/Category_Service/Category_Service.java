@@ -5,6 +5,7 @@ import com.example.web_ban_banh.DTO.Category_DTO.Get.Category_DTO;
 import com.example.web_ban_banh.DTO.Category_DTO.Update.Update_Category_DTO;
 import com.example.web_ban_banh.Entity.Category;
 import com.example.web_ban_banh.Entity.Product;
+import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
 import com.example.web_ban_banh.Exception.NotFoundEx_404.NotFoundExceptionCustom;
 import com.example.web_ban_banh.Repository.Category.Category_RepoIn;
 import com.example.web_ban_banh.Repository.Product.Product_RepoIn;
@@ -68,7 +69,7 @@ public class Category_Service implements Category_ServiceIn {
             List<Product> products = productRepo.findByProductnameIn(dto.getProducts());
             if (products != null && !products.isEmpty()) {
                 if (products.size() != dto.getProducts().size()) {
-                    throw new NotFoundExceptionCustom("Có một hoặc nhiều sản phẩm không tồn tại");
+                    throw new BadRequestExceptionCustom("Có một hoặc nhiều sản phẩm không tồn tại");
                 }
             } else {
                 throw new NotFoundExceptionCustom("Không tìm thấy sản phẩm nào cả");
