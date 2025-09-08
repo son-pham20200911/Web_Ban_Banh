@@ -4,6 +4,7 @@ import com.example.web_ban_banh.DTO.Product_DTO.Create.Create_ProductDTO;
 import com.example.web_ban_banh.DTO.Product_DTO.Get.ProductDTO;
 import com.example.web_ban_banh.DTO.Product_DTO.Get.ProductHideProductSizeDTO;
 import com.example.web_ban_banh.DTO.Product_DTO.Update.Update_ProductDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

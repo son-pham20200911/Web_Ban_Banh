@@ -11,11 +11,17 @@ import com.example.web_ban_banh.Exception.NotFoundEx_404.NotFoundExceptionCustom
 import com.example.web_ban_banh.Repository.Category.Category_RepoIn;
 import com.example.web_ban_banh.Repository.Product.Product_RepoIn;
 import com.example.web_ban_banh.Repository.Product_size.Product_size_RepoIn;
+import io.jsonwebtoken.io.IOException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -345,75 +351,94 @@ public class Product_Service implements Product_ServiceIn {
     @Override
     @Transactional
     public ProductDTO createProduct(Create_ProductDTO dto) {
-        List<Product>products=new ArrayList<>();
-        Product product = new Product();
-        products.add(product);
-        product.setProductname(dto.getProductname());
-        product.setDescription(dto.getDescribe());
-        product.setImg(dto.getImg());
+        try {
+
+            // Tạo thư mục uploads nếu chưa có
+            Path uploadDir = Paths.get("uploads");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+
+            // Tạo tên file duy nhất
+            String fileName = System.currentTimeMillis() + "_" + dto.getImg().getOriginalFilename();
+            Path filePath = uploadDir.resolve(fileName);
+
+            // Lưu file vào thư mục uploads
+            Files.copy(dto.getImg().getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            List<Product> products = new ArrayList<>();
+            Product product = new Product();
+            products.add(product);
+            product.setProductname(dto.getProductname());
+            product.setDescription(dto.getDescribe());
 
 
-        //Tìm các SIZE mà user nhập vào xem có hay không
-        List<Product_size> productSizes = productSizeRepo.findByLabelIn(dto.getProduct_size());
-        //Nếu user có nhập SIZE
-        if (productSizes != null && !productSizes.isEmpty()) {
-            if (productSizes.size() != dto.getProduct_size().size()) {
-                throw new NotFoundExceptionCustom("Có một hoặc nhiều SIZE không tồn tại");
-            }
-            for (Product_size pro:productSizes) {
-                pro.setProducts(products);
-            }
-            product.setProductSizes(productSizes);
-        } else {
-            //Nếu User không nhập SIZE
-            for (Product_size pro:productSizes) {
-                pro.setProducts(products);
-            }
-            product.setProductSizes(null);
-        }
-
-        //Nếu sản phẩm mà ta đang tạo có SIZE và giá gốc để trống thì ta sẽ set giá gốc thành giá gốc của SIZE nhỏ nhất
-        if (dto.getOriginalPrice() == null && dto.getProduct_size() != null && !dto.getProduct_size().isEmpty()) {
-            Product_size minPrice = productSizes.get(0);
-            for (Product_size size : productSizes) {
-                if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
-                    minPrice = size;
+            //Tìm các SIZE mà user nhập vào xem có hay không
+            List<Product_size> productSizes = productSizeRepo.findByLabelIn(dto.getProduct_size());
+            //Nếu user có nhập SIZE
+            if (productSizes != null && !productSizes.isEmpty()) {
+                if (productSizes.size() != dto.getProduct_size().size()) {
+                    throw new NotFoundExceptionCustom("Có một hoặc nhiều SIZE không tồn tại");
                 }
+                for (Product_size pro : productSizes) {
+                    pro.setProducts(products);
+                }
+                product.setProductSizes(productSizes);
+            } else {
+                //Nếu User không nhập SIZE
+                for (Product_size pro : productSizes) {
+                    pro.setProducts(products);
+                }
+                product.setProductSizes(null);
             }
-            product.setOriginalPrice(minPrice.getOriginalPrice());
-            product.setPromotionalPrice(minPrice.getPromotionalPrice());
-        }
-        if (dto.getOriginalPrice() != null) { //Còn nếu sản phẩm đó không có SIZE và được điền giá gốc thì ta lấy giá gốc đó luôn
-            product.setOriginalPrice(dto.getOriginalPrice());
-            product.setPromotionalPrice(dto.getPromotionalPrice());
-        }
 
-        //Nếu sản phẩm để số lượng rỗng và có SIZE thì ta sẽ lấy toàn bộ số lượng của SIZE đó làm tổng số lượng của sản phẩm đó
-        if (dto.getQuantity() == null && productSizes != null && !productSizes.isEmpty()) {
-            int totalQuantity = 0;
-            for (Product_size quantitySize : productSizes) {
-                totalQuantity += quantitySize.getQuantity();
+            //Nếu sản phẩm mà ta đang tạo có SIZE và giá gốc để trống thì ta sẽ set giá gốc thành giá gốc của SIZE nhỏ nhất
+            if (dto.getOriginalPrice() == null && dto.getProduct_size() != null && !dto.getProduct_size().isEmpty()) {
+                Product_size minPrice = productSizes.get(0);
+                for (Product_size size : productSizes) {
+                    if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
+                        minPrice = size;
+                    }
+                }
+                product.setOriginalPrice(minPrice.getOriginalPrice());
+                product.setPromotionalPrice(minPrice.getPromotionalPrice());
             }
-            product.setQuantity(totalQuantity);
-        } else {
-            //Nếu không có SIZE thì ta sẽ lấy số lượng mà người dùng nhâp vào
-            product.setQuantity(dto.getQuantity());
+            if (dto.getOriginalPrice() != null) { //Còn nếu sản phẩm đó không có SIZE và được điền giá gốc thì ta lấy giá gốc đó luôn
+                product.setOriginalPrice(dto.getOriginalPrice());
+                product.setPromotionalPrice(dto.getPromotionalPrice());
+            }
+
+            //Nếu sản phẩm để số lượng rỗng và có SIZE thì ta sẽ lấy toàn bộ số lượng của SIZE đó làm tổng số lượng của sản phẩm đó
+            if (dto.getQuantity() == null && productSizes != null && !productSizes.isEmpty()) {
+                int totalQuantity = 0;
+                for (Product_size quantitySize : productSizes) {
+                    totalQuantity += quantitySize.getQuantity();
+                }
+                product.setQuantity(totalQuantity);
+            } else {
+                //Nếu không có SIZE thì ta sẽ lấy số lượng mà người dùng nhâp vào
+                product.setQuantity(dto.getQuantity());
+            }
+
+            Category category = categotyRepo.findByCategoryName(dto.getCategory());
+            if (category == null) {
+                throw new NotFoundExceptionCustom("Không tìm thấy Thể Loại " + dto.getCategory());
+            }
+            category.setProducts(products);
+            product.setCategory(category);
+
+            product.setImg("/images"+fileName);
+
+            Product create = productRepo.save(product);
+            ProductDTO productDTO = modelMapper.map(create, ProductDTO.class);
+
+            return productDTO;
+        }catch (IOException | java.io.IOException e){
+            throw new RuntimeException("Lỗi khi lưu sản phẩm và ảnh", e);
         }
-
-        Category category = categotyRepo.findByCategoryName(dto.getCategory());
-        if (category == null) {
-            throw new NotFoundExceptionCustom("Không tìm thấy Thể Loại " + dto.getCategory());
-        }
-        category.setProducts(products);
-        product.setCategory(category);
-
-        Product create = productRepo.save(product);
-        ProductDTO productDTO = modelMapper.map(create, ProductDTO.class);
-
-        return productDTO;
     }
 
-    //phương thức cập nhật sản phẩm
+    //Phương thức cập nhật sản phẩm
     @Override
     @Transactional
     public ProductDTO updateProduct(int id, Update_ProductDTO dto) {

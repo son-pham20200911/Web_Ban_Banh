@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -96,15 +97,15 @@ public class Product_Controller {
     }
 
     @PostMapping("/")
-    public ResponseEntity<?>createProduct(@RequestBody @Valid Create_ProductDTO dto){
+    public ResponseEntity<?>createProduct(@ModelAttribute @Valid Create_ProductDTO dto){
         ProductDTO productDTO=productService.createProduct(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Tạo thành công Sản Phẩm "+dto.getProductname());
+        return ResponseEntity.status(HttpStatus.CREATED).body("Tạo thành công Sản Phẩm "+productDTO.getProductname());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?>updateProduct(@RequestBody @Valid Update_ProductDTO dto, @PathVariable @Min(value = 1,message = "ID phải lớn hơn 0")int id){
         ProductDTO productDTO=productService.updateProduct(id,dto);
-        return ResponseEntity.ok("Đã cập nhật thành công Sản Phẩm: "+dto.getProductname());
+        return ResponseEntity.ok("Đã cập nhật thành công Sản Phẩm: "+productDTO.getProductname());
     }
 
     @DeleteMapping("/{id}")

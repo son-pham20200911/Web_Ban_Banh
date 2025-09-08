@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class Create_ProductDTO {
     @Digits(integer = 10,fraction = 3,message = "Giá Khuyến Mãi có định dạng số thập phân (10000,999)")
     private Double promotionalPrice;
 
-    private String img;
     private List<String> product_size;
     private String category;
+    private MultipartFile img;
 }
