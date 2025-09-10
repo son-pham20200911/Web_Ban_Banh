@@ -31,6 +31,10 @@ public class Product {
     private Double promotionalPrice;
     @Column(name="img")
     private String img;
+    @Column(name="slug",length = 255,nullable = false)
+    private String slug;
+    @Column(name="is_new")
+    private boolean isNew;
 
     @OneToMany(mappedBy = "product",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Cart_details>cartDetails=new ArrayList<>();

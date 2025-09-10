@@ -14,7 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Create_ProductDTO {
-    private int id;
 
     @NotBlank(message = "Không được để trống Tên Sản Phẩm")
     @Length(max=255,message = "Tên Sản Phẩm không đươc quá 255 ký tự")
@@ -34,6 +33,12 @@ public class Create_ProductDTO {
     @Positive(message = "Giá Khuyến Mãi phải lớn hơn 0")
     @Digits(integer = 10,fraction = 3,message = "Giá Khuyến Mãi có định dạng số thập phân (10000,999)")
     private Double promotionalPrice;
+
+    @NotBlank(message = "Không được để trống Slug")
+    @Length(max = 255,message = "Slug không được vượt quá 255 ký tự")
+    private String slug;
+
+    private boolean isNew;
 
     private List<String> product_size;
     private String category;

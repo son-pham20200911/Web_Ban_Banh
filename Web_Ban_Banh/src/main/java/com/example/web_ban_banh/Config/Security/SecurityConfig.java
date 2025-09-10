@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Tắt CSRF để test API
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**","/error").permitAll() //Tại sao phải thêm "/error"
+                        .requestMatchers("/api/auth/**","/error","/images/**").permitAll() //Tại sao phải thêm "/error"
                                                                                       //Vì khi xảy ra các lỗi như 500, 404 thì mặc định SpringBoot sẽ chuyển hướng đến endpoint "/error"
                                                                                       //Vậy nên ta phải để .permitAll() để endpoint "/error" không cần xác thực hay phân quyền
                                                                                       //Nếu không để như vậy thì nó sẽ auto ném ra lỗi 403

@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,8 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Update_ProductDTO {
-    private int id;
-
     @NotBlank(message = "Không được để trống Tên Sản Phẩm")
     @Length(max=255,message = "Tên Sản Phẩm không đươc quá 255 ký tự")
     private String productname;
@@ -36,7 +35,13 @@ public class Update_ProductDTO {
     @Digits(integer = 10,fraction = 3,message = "Giá Khuyến Mãi có định dạng số thập phân (10000,999)")
     private Double promotionalPrice;
 
-    private String img;
+    @NotBlank(message = "Không được để trống Slug")
+    @Length(max = 255,message = "Slug không được vượt quá 255 ký tự")
+    private String slug;
+
+    private boolean isNew;
+
+    private MultipartFile imgFile;
     private List<String> product_size;
     private String category;
 }

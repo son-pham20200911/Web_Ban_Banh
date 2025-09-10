@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -103,7 +104,7 @@ public class Product_Controller {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?>updateProduct(@RequestBody @Valid Update_ProductDTO dto, @PathVariable @Min(value = 1,message = "ID phải lớn hơn 0")int id){
+    public ResponseEntity<?>updateProduct(@ModelAttribute @Valid Update_ProductDTO dto, @PathVariable @Min(value = 1,message = "ID phải lớn hơn 0")int id) throws IOException {
         ProductDTO productDTO=productService.updateProduct(id,dto);
         return ResponseEntity.ok("Đã cập nhật thành công Sản Phẩm: "+productDTO.getProductname());
     }

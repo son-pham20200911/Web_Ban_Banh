@@ -6,6 +6,7 @@ import com.example.web_ban_banh.DTO.Product_DTO.Get.ProductHideProductSizeDTO;
 import com.example.web_ban_banh.DTO.Product_DTO.Update.Update_ProductDTO;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface Product_ServiceIn {
@@ -20,7 +21,7 @@ public interface Product_ServiceIn {
 
       public ProductDTO createProduct(Create_ProductDTO dto);
 
-      public ProductDTO updateProduct(int id,Update_ProductDTO dto);
+      public ProductDTO updateProduct(int id,Update_ProductDTO dto) throws IOException;
 
       public void deleteProduct(int id);
 

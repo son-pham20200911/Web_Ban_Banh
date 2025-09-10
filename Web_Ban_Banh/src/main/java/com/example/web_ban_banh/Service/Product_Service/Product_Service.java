@@ -7,6 +7,7 @@ import com.example.web_ban_banh.DTO.Product_DTO.Update.Update_ProductDTO;
 import com.example.web_ban_banh.Entity.Category;
 import com.example.web_ban_banh.Entity.Product;
 import com.example.web_ban_banh.Entity.Product_size;
+import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
 import com.example.web_ban_banh.Exception.NotFoundEx_404.NotFoundExceptionCustom;
 import com.example.web_ban_banh.Repository.Category.Category_RepoIn;
 import com.example.web_ban_banh.Repository.Product.Product_RepoIn;
@@ -352,6 +353,9 @@ public class Product_Service implements Product_ServiceIn {
     @Transactional
     public ProductDTO createProduct(Create_ProductDTO dto) {
         try {
+            List<Product> products = new ArrayList<>();
+            Product product = new Product();
+            products.add(product);
 
             // Tạo thư mục uploads nếu chưa có
             Path uploadDir = Paths.get("uploads");
@@ -366,11 +370,11 @@ public class Product_Service implements Product_ServiceIn {
             // Lưu file vào thư mục uploads
             Files.copy(dto.getImg().getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            List<Product> products = new ArrayList<>();
-            Product product = new Product();
-            products.add(product);
+            product.setImg("/images/"+fileName);
             product.setProductname(dto.getProductname());
             product.setDescription(dto.getDescribe());
+            product.setSlug(dto.getSlug());
+            product.setNew(dto.isNew());
 
 
             //Tìm các SIZE mà user nhập vào xem có hay không
@@ -427,21 +431,21 @@ public class Product_Service implements Product_ServiceIn {
             category.setProducts(products);
             product.setCategory(category);
 
-            product.setImg("/images"+fileName);
+
 
             Product create = productRepo.save(product);
             ProductDTO productDTO = modelMapper.map(create, ProductDTO.class);
 
             return productDTO;
         }catch (IOException | java.io.IOException e){
-            throw new RuntimeException("Lỗi khi lưu sản phẩm và ảnh", e);
+            throw new BadRequestExceptionCustom("Lỗi khi lưu sản phẩm và ảnh "+e.getMessage());
         }
     }
 
     //Phương thức cập nhật sản phẩm
     @Override
     @Transactional
-    public ProductDTO updateProduct(int id, Update_ProductDTO dto) {
+    public ProductDTO updateProduct(int id, Update_ProductDTO dto) throws java.io.IOException {
         Optional<Product> product = productRepo.findById(id);
         if (product.isEmpty()) {
             throw new NotFoundExceptionCustom("Không tìm thấy Sản Phẩm có ID: " + id);
@@ -449,7 +453,22 @@ public class Product_Service implements Product_ServiceIn {
         Product pr = product.get();
         pr.setProductname(dto.getProductname());
         pr.setDescription(dto.getDescribe());
-        pr.setImg(dto.getImg());
+        pr.setNew(dto.isNew());
+        pr.setSlug(dto.getSlug());
+
+        //Cập nhật ảnh
+        if (dto.getImgFile() != null && !dto.getImgFile().isEmpty()) {
+            // Xóa ảnh cũ
+            String oldImg = pr.getImg().replace("/images/", "");
+            Path oldPath = Paths.get("uploads/", oldImg);
+            Files.deleteIfExists(oldPath);
+
+            // Lưu ảnh mới (tương tự create)
+            String fileName = dto.getImgFile().getOriginalFilename();
+            Path uploadPath = Paths.get("uploads/", fileName);
+            Files.copy(dto.getImgFile().getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+            pr.setImg("/images/" + fileName);
+        }
 
         //Cập nhật Product Size
         List<Product_size> productSizes = productSizeRepo.findByLabelIn(dto.getProduct_size());
@@ -541,6 +560,17 @@ public class Product_Service implements Product_ServiceIn {
            //Ngắt kết nối từ phía SỞ HỮU FK
             if(pr.getCategory()!=null){
                 pr.setCategory(null);
+            }
+        }
+        // Xóa file ảnh từ thư mục uploads/ nếu tồn tại
+        if (pr.getImg() != null && !pr.getImg().isEmpty()) {
+            String fileName = pr.getImg().replace("/images/", ""); // Lấy tên file từ đường dẫn
+            Path imagePath = Paths.get("uploads/", fileName);
+            try {
+                Files.deleteIfExists(imagePath); // Xóa file nếu tồn tại
+            } catch (java.io.IOException e) {
+                // Log lỗi nhưng không throw để delete entity vẫn thành công
+                System.err.println("Lỗi khi xóa ảnh: " + e.getMessage());
             }
         }
 
