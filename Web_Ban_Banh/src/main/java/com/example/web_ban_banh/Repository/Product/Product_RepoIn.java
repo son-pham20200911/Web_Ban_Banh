@@ -1,6 +1,8 @@
 package com.example.web_ban_banh.Repository.Product;
 
 import com.example.web_ban_banh.Entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +14,8 @@ import java.util.List;
 public interface Product_RepoIn extends JpaRepository<Product,Integer> {
     @Query(value="SELECT * FROM products WHERE product_name LIKE CONCAT('%',?1,'%')",nativeQuery = true)
     public List<Product> findProductByProductName (String productName);
+    @Query(value="SELECT * FROM products WHERE product_name LIKE CONCAT('%',?1,'%')",nativeQuery = true)
+    public Page<Product> findProductByProductNamePage (String productName,Pageable pageable);
 
     //Query Method hiển thị sản phẩm có SIZE với GIÁ NHỎ NHẤT
     //SELECT p FROM Product p: Lấy tất cả sản phẩm

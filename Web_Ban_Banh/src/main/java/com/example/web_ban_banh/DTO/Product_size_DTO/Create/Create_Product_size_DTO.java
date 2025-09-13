@@ -13,10 +13,12 @@ import org.hibernate.validator.constraints.Length;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Create_Product_size_DTO {
-    private int id;
+
     @NotBlank(message = "Không được để trống Label")
     @Length(max=255, message = "Label không được quá 255 ký tự")
     private String label;
+
+    private String productName;
 
     @NotNull(message = "Không được để trống Giá Gốc")
     @Digits(integer = 10,fraction = 3,message = "Nhập đúng định dạng số thập phân")

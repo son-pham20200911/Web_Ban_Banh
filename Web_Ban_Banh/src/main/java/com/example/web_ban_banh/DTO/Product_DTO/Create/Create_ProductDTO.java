@@ -38,7 +38,7 @@ public class Create_ProductDTO {
     @Length(max = 255,message = "Slug không được vượt quá 255 ký tự")
     private String slug;
 
-    private boolean isNew;
+    private Boolean isNew;
 
     private List<String> product_size;
     private String category;

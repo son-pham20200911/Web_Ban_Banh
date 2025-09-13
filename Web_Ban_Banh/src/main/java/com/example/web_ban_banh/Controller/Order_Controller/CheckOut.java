@@ -31,12 +31,7 @@ public class CheckOut {
             return ResponseEntity.ok(Map.of("message","Đơn hàng được tạo thành công",
                                             "Thông tin đơn hàng",dto));
         }catch(Exception e){
-            // Log lỗi để debug
-            System.err.println("Lỗi tạo đơn hàng: " + e.getMessage());
-            e.printStackTrace();
-
-            // Throw exception phù hợp với người dùng
-            throw new BadRequestExceptionCustom("Không thể tạo đơn hàng. Vui lòng thử lại sau");
+            throw new BadRequestExceptionCustom("Không thể tạo đơn hàng. Vui lòng thử lại sau. "+e.getMessage());
         }
 
     }

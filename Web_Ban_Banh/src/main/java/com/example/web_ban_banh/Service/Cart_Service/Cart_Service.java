@@ -121,7 +121,7 @@ public class Cart_Service implements Cart_ServiceIn {
         }
 
         if (req.getQuantity() > stock) {
-            throw new BadRequestExceptionCustom("Số lượng hàng trong kho đã hết");
+            throw new BadRequestExceptionCustom("Số lượng hàng bạn yêu cầu lớn hơn số lượng hàng có trong kho");
         }
 
         // 3) Tính đơn giá tại thời điểm thêm giỏ (chốt giá vào cart_details)

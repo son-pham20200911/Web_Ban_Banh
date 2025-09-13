@@ -13,7 +13,8 @@ import org.hibernate.validator.constraints.Length;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Update_Product_size_DTO {
-    private int id;
+
+    private String productName;
     @NotBlank(message = "Không được để trống Label")
     @Length(max=255, message = "Label không được quá 255 ký tự")
     private String label;

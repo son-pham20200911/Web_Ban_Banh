@@ -81,6 +81,7 @@ public class Product_Size_Service implements Product_Size_ServiceIn{
 
         Product_size productSize=new Product_size();
         productSize.setLabel(dto.getLabel());
+        productSize.setProductName(dto.getProductName());
         productSize.setOriginalPrice(dto.getOriginalPrice());
         productSize.setPromotionalPrice(dto.getPromotionalPrice());
         productSize.setQuantity(dto.getQuantity());
@@ -102,6 +103,7 @@ public class Product_Size_Service implements Product_Size_ServiceIn{
         }
         Product_size pz=productSize.get();
         pz.setLabel(dto.getLabel());
+        pz.setProductName(dto.getProductName());
         pz.setOriginalPrice(dto.getOriginalPrice());
         pz.setPromotionalPrice(dto.getPromotionalPrice());
         pz.setQuantity(dto.getQuantity());

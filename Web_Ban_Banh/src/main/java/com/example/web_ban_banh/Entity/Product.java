@@ -34,7 +34,7 @@ public class Product {
     @Column(name="slug",length = 255,nullable = false)
     private String slug;
     @Column(name="is_new")
-    private boolean isNew;
+    private Boolean isNew;
 
     @OneToMany(mappedBy = "product",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Cart_details>cartDetails=new ArrayList<>();

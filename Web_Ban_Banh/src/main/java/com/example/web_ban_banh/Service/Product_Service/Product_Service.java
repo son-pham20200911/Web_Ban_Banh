@@ -15,6 +15,8 @@ import com.example.web_ban_banh.Repository.Product_size.Product_size_RepoIn;
 import io.jsonwebtoken.io.IOException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,47 +48,46 @@ public class Product_Service implements Product_ServiceIn {
     //Phương thức hiển thị toàn bộ sản phẩm (Sẽ hiển thị mức giá thấp nhất của sản phẩm (áp dụng với các sản phẩm có SIZE))
     @Override
     @Transactional(readOnly = true)
-    public List<ProductDTO> getAllProduct() {
-        List<Product> products = productRepo.findAll();
-        List<ProductDTO> productDTOs = new ArrayList<>();
+    public Page<ProductDTO> getAllProduct(Pageable pageable) {
+        Page<Product> products = productRepo.findAll(pageable);
+        return products.map(product -> {
+                    ProductDTO dto = modelMapper.map(product, ProductDTO.class);
 
-        for (Product product : products) {
-            ProductDTO dto = modelMapper.map(product, ProductDTO.class);
+                    // Kiểm tra Product có SIZE không
+                    if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
+                        // Nếu có thì ta sẽ lấy SIZE đầu tiên của Product đó
+                        Product_size minPrice = product.getProductSizes().get(0);
 
-            // Kiểm tra Product có SIZE không
-            if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                // Nếu có thì ta sẽ lấy SIZE đầu tiên của Product đó
-                Product_size minPrice = product.getProductSizes().get(0);
-
-                // Lặp qua tất cả các SIZE của Product đó
-                for (Product_size size : product.getProductSizes()) {
-                    // Ta sẽ so sánh GIÁ tất cả các SIZE của Product đó với SIZE đầu tiên của Product đó
-                    if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
-                        // Nếu có 1 SIZE bất kỳ có GIÁ NHỎ HƠN GIÁ của Product SIZE đầu tiên thì ta sẽ gán Product có SIZE nhỏ hơn đó vào Product có SIZE đầu tiên
-                        minPrice = size;
+                        // Lặp qua tất cả các SIZE của Product đó
+                        for (Product_size size : product.getProductSizes()) {
+                            // Ta sẽ so sánh GIÁ tất cả các SIZE của Product đó với SIZE đầu tiên của Product đó
+                            if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
+                                // Nếu có 1 SIZE bất kỳ có GIÁ NHỎ HƠN GIÁ của Product SIZE đầu tiên thì ta sẽ gán Product có SIZE nhỏ hơn đó vào Product có SIZE đầu tiên
+                                minPrice = size;
+                            }
+                        }
+                        //Gán lại GIÁ của cho dto
+                        dto.setOriginalPrice(minPrice.getOriginalPrice());
+                        dto.setPromotionalPrice(minPrice.getPromotionalPrice());
                     }
-                }
-                //Gán lại GIÁ của cho dto
-                dto.setOriginalPrice(minPrice.getOriginalPrice());
-                dto.setPromotionalPrice(minPrice.getPromotionalPrice());
-            }
-            // Lấy số lượng Sản Phẩm
-            //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
-            if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity=0;
-                for (Product_size sizeQuantity:product.getProductSizes()) {
-                    totalQuantity+=sizeQuantity.getQuantity();
-                }
-                dto.setQuantity(totalQuantity);
-            }else{
-                //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
-                //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                dto.setQuantity(product.getQuantity()!=null?product.getQuantity():0);
-            }
+                    // Lấy số lượng Sản Phẩm
+                    //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
+                    if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
+                        int totalQuantity = 0;
+                        for (Product_size sizeQuantity : product.getProductSizes()) {
+                            totalQuantity += sizeQuantity.getQuantity();
+                        }
+                        dto.setQuantity(totalQuantity);
+                    } else {
+                        //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
+                        //Nếu không có SIZE và không có số lượng gốc thì lấy 0
+                        dto.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
+                    }
 
-            productDTOs.add(dto);
-        }
-        return productDTOs;
+                    return dto;
+                }
+        );
+
     }
 
     //Phương thức tìm sản phẩm theo ID
@@ -110,13 +111,13 @@ public class Product_Service implements Product_ServiceIn {
             productDTO.setPromotionalPrice(minPrice.getPromotionalPrice());
         }
         if (pro.getProductSizes() != null && !pro.getProductSizes().isEmpty()) {
-            int totalQuantity=0;
-            for (Product_size sizeQuantity:pro.getProductSizes()) {
-                totalQuantity+=sizeQuantity.getQuantity();
+            int totalQuantity = 0;
+            for (Product_size sizeQuantity : pro.getProductSizes()) {
+                totalQuantity += sizeQuantity.getQuantity();
             }
             pro.setQuantity(totalQuantity);
-        }else{
-            pro.setQuantity(pro.getQuantity()!=null? pro.getQuantity() : 0);
+        } else {
+            pro.setQuantity(pro.getQuantity() != null ? pro.getQuantity() : 0);
         }
         return productDTO;
     }
@@ -125,13 +126,12 @@ public class Product_Service implements Product_ServiceIn {
     //Phương thức tìm sản phẩm theo tên sản phẩm
     @Override
     @Transactional(readOnly = true)
-    public List<ProductDTO> findProductByProductName(String productname) {
-        List<Product> products = productRepo.findProductByProductName(productname);
+    public Page<ProductDTO> findProductByProductName(String productname,Pageable pageable) {
+        Page<Product> products = productRepo.findProductByProductNamePage(productname,pageable);
         if (products == null || products.isEmpty()) {
             throw new NotFoundExceptionCustom("Không tìm thấy Sản Phẩm " + productname + " mà bạn đang tìm");
         }
-        List<ProductDTO> productsDTO = new ArrayList<>();
-        for (Product product : products) {
+        return products.map(product->{
             ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
 
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
@@ -148,20 +148,22 @@ public class Product_Service implements Product_ServiceIn {
             // Lấy số lượng Sản Phẩm
             //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity=0;
-                for (Product_size sizeQuantity:product.getProductSizes()) {
-                    totalQuantity+=sizeQuantity.getQuantity();
+                int totalQuantity = 0;
+                for (Product_size sizeQuantity : product.getProductSizes()) {
+                    totalQuantity += sizeQuantity.getQuantity();
                 }
                 productDTO.setQuantity(totalQuantity);
-            }else{
+            } else {
                 //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity()!=null?product.getQuantity():0);
+                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
-            productsDTO.add(productDTO);
+            return productDTO;
         }
-        return productsDTO;
+        );
     }
+
+
 
     //Phương thức tìm sản phẩm theo khoảng giá (Dùng Query Method)
     @Override
@@ -185,15 +187,15 @@ public class Product_Service implements Product_ServiceIn {
             // Lấy số lượng Sản Phẩm
             //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity=0;
-                for (Product_size sizeQuantity:product.getProductSizes()) {
-                    totalQuantity+=sizeQuantity.getQuantity();
+                int totalQuantity = 0;
+                for (Product_size sizeQuantity : product.getProductSizes()) {
+                    totalQuantity += sizeQuantity.getQuantity();
                 }
                 productDTO.setQuantity(totalQuantity);
-            }else{
+            } else {
                 //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity()!=null?product.getQuantity():0);
+                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
             productsDTO.add(productDTO);
         }
@@ -222,15 +224,15 @@ public class Product_Service implements Product_ServiceIn {
             // Lấy số lượng Sản Phẩm
             //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity=0;
-                for (Product_size sizeQuantity:product.getProductSizes()) {
-                    totalQuantity+=sizeQuantity.getQuantity();
+                int totalQuantity = 0;
+                for (Product_size sizeQuantity : product.getProductSizes()) {
+                    totalQuantity += sizeQuantity.getQuantity();
                 }
                 productDTO.setQuantity(totalQuantity);
-            }else{
+            } else {
                 //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity()!=null?product.getQuantity():0);
+                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
             productDTOs.add(productDTO);
         }
@@ -259,15 +261,15 @@ public class Product_Service implements Product_ServiceIn {
             // Lấy số lượng Sản Phẩm
             //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity=0;
-                for (Product_size sizeQuantity:product.getProductSizes()) {
-                    totalQuantity+=sizeQuantity.getQuantity();
+                int totalQuantity = 0;
+                for (Product_size sizeQuantity : product.getProductSizes()) {
+                    totalQuantity += sizeQuantity.getQuantity();
                 }
                 productDTO.setQuantity(totalQuantity);
-            }else{
+            } else {
                 //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity()!=null?product.getQuantity():0);
+                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
             productDTOs.add(productDTO);
         }
@@ -296,15 +298,15 @@ public class Product_Service implements Product_ServiceIn {
             // Lấy số lượng Sản Phẩm
             //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity=0;
-                for (Product_size sizeQuantity:product.getProductSizes()) {
-                    totalQuantity+=sizeQuantity.getQuantity();
+                int totalQuantity = 0;
+                for (Product_size sizeQuantity : product.getProductSizes()) {
+                    totalQuantity += sizeQuantity.getQuantity();
                 }
                 productDTO.setQuantity(totalQuantity);
-            }else{
+            } else {
                 //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity()!=null?product.getQuantity():0);
+                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
             productsDTO.add(productDTO);
         }
@@ -333,15 +335,15 @@ public class Product_Service implements Product_ServiceIn {
             // Lấy số lượng Sản Phẩm
             //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity=0;
-                for (Product_size sizeQuantity:product.getProductSizes()) {
-                    totalQuantity+=sizeQuantity.getQuantity();
+                int totalQuantity = 0;
+                for (Product_size sizeQuantity : product.getProductSizes()) {
+                    totalQuantity += sizeQuantity.getQuantity();
                 }
                 productDTO.setQuantity(totalQuantity);
-            }else{
+            } else {
                 //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity()!=null?product.getQuantity():0);
+                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
             productsDTO.add(productDTO);
         }
@@ -370,11 +372,11 @@ public class Product_Service implements Product_ServiceIn {
             // Lưu file vào thư mục uploads
             Files.copy(dto.getImg().getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            product.setImg("/images/"+fileName);
+            product.setImg("/images/" + fileName);
             product.setProductname(dto.getProductname());
             product.setDescription(dto.getDescribe());
             product.setSlug(dto.getSlug());
-            product.setNew(dto.isNew());
+            product.setIsNew(dto.getIsNew());
 
 
             //Tìm các SIZE mà user nhập vào xem có hay không
@@ -432,13 +434,12 @@ public class Product_Service implements Product_ServiceIn {
             product.setCategory(category);
 
 
-
             Product create = productRepo.save(product);
             ProductDTO productDTO = modelMapper.map(create, ProductDTO.class);
 
             return productDTO;
-        }catch (IOException | java.io.IOException e){
-            throw new BadRequestExceptionCustom("Lỗi khi lưu sản phẩm và ảnh "+e.getMessage());
+        } catch (IOException | java.io.IOException e) {
+            throw new BadRequestExceptionCustom("Lỗi khi lưu sản phẩm và ảnh " + e.getMessage());
         }
     }
 
@@ -453,7 +454,7 @@ public class Product_Service implements Product_ServiceIn {
         Product pr = product.get();
         pr.setProductname(dto.getProductname());
         pr.setDescription(dto.getDescribe());
-        pr.setNew(dto.isNew());
+        pr.setIsNew(dto.getIsNew());
         pr.setSlug(dto.getSlug());
 
         //Cập nhật ảnh
@@ -464,7 +465,7 @@ public class Product_Service implements Product_ServiceIn {
             Files.deleteIfExists(oldPath);
 
             // Lưu ảnh mới (tương tự create)
-            String fileName = dto.getImgFile().getOriginalFilename();
+            String fileName = System.currentTimeMillis() + "_" + dto.getImgFile().getOriginalFilename();
             Path uploadPath = Paths.get("uploads/", fileName);
             Files.copy(dto.getImgFile().getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
             pr.setImg("/images/" + fileName);
@@ -549,16 +550,16 @@ public class Product_Service implements Product_ServiceIn {
             pr.getProductSizes().clear();                  // Clear Collection từ phía Product
         }
 
-        if(pr.getCategory()!=null){
-         Category category=pr.getCategory();
+        if (pr.getCategory() != null) {
+            Category category = pr.getCategory();
 
             //Ngắt kết nối từ phía KHÔNG SỞ HỮU FK
-           if(category.getProducts()!=null){
-               category.getProducts().remove(pr);
-               categotyRepo.save(category);
-           }
-           //Ngắt kết nối từ phía SỞ HỮU FK
-            if(pr.getCategory()!=null){
+            if (category.getProducts() != null) {
+                category.getProducts().remove(pr);
+                categotyRepo.save(category);
+            }
+            //Ngắt kết nối từ phía SỞ HỮU FK
+            if (pr.getCategory() != null) {
                 pr.setCategory(null);
             }
         }

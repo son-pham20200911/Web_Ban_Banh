@@ -18,6 +18,8 @@ public class Product_size {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id",columnDefinition = "INT UNSIGNED")
     private int id;
+    @Column(name="product_name")
+    private String productName;
     @Column(name="label",nullable = false,length = 255)
     private String label;
     @Column(name="original_price",nullable = false,columnDefinition ="DECIMAL(10,3) CHECK (original_price >= 0)")

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Product_size_DTO {
     private int id;
+    private String productName;
     private String label;
     private Double originalPrice;
     private Double promotionalPrice;
