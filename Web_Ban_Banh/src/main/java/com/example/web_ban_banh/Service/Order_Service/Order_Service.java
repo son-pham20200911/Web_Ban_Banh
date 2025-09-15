@@ -2,6 +2,7 @@ package com.example.web_ban_banh.Service.Order_Service;
 
 import com.example.web_ban_banh.DTO.Order_DTO.CheckOutRequest.CheckOutRequestDTO;
 import com.example.web_ban_banh.DTO.Order_DTO.CheckOutResponese.CheckOutResponseDTO;
+import com.example.web_ban_banh.DTO.Order_DTO.Get.OrderDTO;
 import com.example.web_ban_banh.DTO.Order_Detail_DTO.Get.Order_Details_DTO;
 import com.example.web_ban_banh.Entity.*;
 import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
@@ -14,7 +15,12 @@ import com.example.web_ban_banh.Repository.Order_details.Order_details_RepoIn;
 import com.example.web_ban_banh.Repository.Product.Product_RepoIn;
 import com.example.web_ban_banh.Repository.Product_size.Product_size_RepoIn;
 import com.example.web_ban_banh.Repository.User.User_RepoIn;
+import jakarta.persistence.criteria.Predicate;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +36,10 @@ public class Order_Service implements Order_ServicenIn {
     private Product_size_RepoIn productSizeRepo;
     private User_RepoIn userRepo;
     private Discount_code_RepoIn discountCodeRepo;
+    private ModelMapper modelMapper;
 
     @Autowired
-    public Order_Service(Cart_RepoIn cartRepo, Cart_details_RepoIn cartDetailsRepo, Order_RepoIn orderRepo, Order_details_RepoIn orderDetailRepo, Product_RepoIn productRepo, Product_size_RepoIn productSizeRepo, User_RepoIn userRepo, Discount_code_RepoIn discountCodeRepo) {
+    public Order_Service(Cart_RepoIn cartRepo, Cart_details_RepoIn cartDetailsRepo, Order_RepoIn orderRepo, Order_details_RepoIn orderDetailRepo, Product_RepoIn productRepo, Product_size_RepoIn productSizeRepo, User_RepoIn userRepo, Discount_code_RepoIn discountCodeRepo,ModelMapper modelMapper) {
         this.cartRepo = cartRepo;
         this.cartDetailsRepo = cartDetailsRepo;
         this.orderRepo = orderRepo;
@@ -41,6 +48,7 @@ public class Order_Service implements Order_ServicenIn {
         this.productSizeRepo = productSizeRepo;
         this.userRepo = userRepo;
         this.discountCodeRepo = discountCodeRepo;
+        this.modelMapper=modelMapper;
     }
 
     @Override
@@ -199,5 +207,51 @@ public class Order_Service implements Order_ServicenIn {
         } else {
             throw new BadRequestExceptionCustom("Sản phẩm " + product.getProductname() + " đã hết hàng");
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrderDTO> getAllOrder(Pageable pageable) {
+        Page<Order>orders=orderRepo.findAll(pageable);
+        return orders.map(order->{
+            OrderDTO dto=modelMapper.map(order,OrderDTO.class);
+            return dto;
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderDTO findById(int id) {
+        Optional<Order>o=orderRepo.findById(id);
+        if(o.isEmpty()){
+            throw new NotFoundExceptionCustom("Không tìm thấy đơn hàng có id "+id);
+        }
+        Order order=o.get();
+        OrderDTO dto=modelMapper.map(order,OrderDTO.class);
+        return dto;
+    }
+
+    //Phương thức tìm Order theo ba tiêu chí: Status, orderDate, totalAmount
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrderDTO> filter(Pageable pageable, Date orderDate, Status status, Double totalAmount) {
+        Specification<Order> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (orderDate != null) {
+                predicates.add(cb.equal(cb.function("DATE", Date.class, root.get("orderDate")), orderDate));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (totalAmount != null) {
+                predicates.add(cb.equal(root.get("totalAmount"), totalAmount));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Order>orders=orderRepo.findAll(spec,pageable);
+        return orders.map(order->modelMapper.map(order,OrderDTO.class));
     }
 }

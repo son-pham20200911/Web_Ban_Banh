@@ -1,11 +1,12 @@
-package com.example.web_ban_banh.Controller.Login_Register;
+package com.example.web_ban_banh.Controller.Login_Register_Logout;
 
 import com.example.web_ban_banh.Config.Security.JwtUtil;
 import com.example.web_ban_banh.DTO.Login_DTO.AuthRequest;
 import com.example.web_ban_banh.DTO.Register_DTO.RegisterUserRequest_DTO;
-import com.example.web_ban_banh.DTO.User_DTO.Get.User_DTO;
-import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
+import com.example.web_ban_banh.DTO.User_DTO.Get.UserPublic_DTO;
+import com.example.web_ban_banh.Service.BlacklistService.TokenBlacklistService;
 import com.example.web_ban_banh.Service.User_Service.User_ServiceIn;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,11 +29,13 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUltil;
     private User_ServiceIn userService;
+    private TokenBlacklistService tokenBlacklistService;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUltil,User_ServiceIn userService) {
+    public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUltil,User_ServiceIn userService,TokenBlacklistService tokenBlacklistService) {
         this.authenticationManager = authenticationManager;
         this.jwtUltil = jwtUltil;
         this.userService=userService;
+        this.tokenBlacklistService=tokenBlacklistService;
     }
 
     @PostMapping("/login")
@@ -48,7 +51,18 @@ public class AuthController {
 
     @PostMapping("/regist")
     public ResponseEntity<?>register(@RequestBody @Valid RegisterUserRequest_DTO request){
-            User_DTO create=userService.register(request);
-            return ResponseEntity.ok("Đã đăng ký thành công");
+            UserPublic_DTO create=userService.register(request);
+            return ResponseEntity.ok("Đã đăng ký thành công User mới: "+create.getFullName());
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?>logout(HttpServletRequest request){
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            tokenBlacklistService.addToBlacklist(token); // Thêm token vào blacklist
+        }
+        return ResponseEntity.ok("Đăng xuất thành công. Token đã bị thu hồi.");
+    }
+
 }

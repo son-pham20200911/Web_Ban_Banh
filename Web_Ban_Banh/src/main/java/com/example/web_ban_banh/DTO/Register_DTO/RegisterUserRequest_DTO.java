@@ -18,13 +18,9 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterUserRequest_DTO {
-    @NotBlank(message = "Không được để trống Họ")
+    @NotBlank(message = "Không được để trống Họ và Tên")
     @Length(max = 255, message = "Số lượng ký tự không được quá 255")
-    private String lastName;
-
-    @NotBlank(message = "Không được để trống Tên")
-    @Length(max = 255, message = "Số lượng ký tự không được quá 255")
-    private String firstName;
+    private String fullName;
 
     @NotBlank(message = "Không được để trống Đại Chỉ")
     @Length(max = 255, message = "Số lượng ký tự không được quá 500")
@@ -43,7 +39,7 @@ public class RegisterUserRequest_DTO {
     private Gender gender;
 
     @NotBlank(message = "Không được để trống Email")
-    @Email(message = "Email phải đúng định dạng")
+    @Pattern(regexp = "^[a-zA-Z0-9!@#$%^&*_-]+(@gmail.com)$",message = "Email của bạn phải đúng định dạng")
     private String email;
     private Role role;
 

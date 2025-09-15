@@ -30,6 +30,10 @@ public class Order {
     private Double originalPrice;
     @Column(name="promotional_price",nullable = false,columnDefinition = "DECIMAL(10,3) CHECK (promotional_price >= 0)")
     private Double promotionalPrice;
+    @Column(name="delivery_address",length = 500,nullable = false)
+    private String deliveryAddress;
+    @Column(name="note",length = 500)
+    private String note;
 
     @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.REFRESH,CascadeType.PERSIST},fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")

@@ -1,6 +1,7 @@
 package com.example.web_ban_banh.Config.ModelMapper;
 
 import com.example.web_ban_banh.DTO.Product_DTO.Get.ProductDTO;
+import com.example.web_ban_banh.Entity.Cart_details;
 import com.example.web_ban_banh.Entity.Product;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

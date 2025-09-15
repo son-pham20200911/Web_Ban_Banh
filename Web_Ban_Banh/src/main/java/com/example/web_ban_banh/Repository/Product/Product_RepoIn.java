@@ -14,6 +14,8 @@ import java.util.List;
 public interface Product_RepoIn extends JpaRepository<Product,Integer> {
     @Query(value="SELECT * FROM products WHERE product_name LIKE CONCAT('%',?1,'%')",nativeQuery = true)
     public List<Product> findProductByProductName (String productName);
+
+    //Query Method TÌM PRODUCT thông qua PRODUCTNAME (PHÂN TRANG)
     @Query(value="SELECT * FROM products WHERE product_name LIKE CONCAT('%',?1,'%')",nativeQuery = true)
     public Page<Product> findProductByProductNamePage (String productName,Pageable pageable);
 
@@ -33,18 +35,28 @@ public interface Product_RepoIn extends JpaRepository<Product,Integer> {
 
     @Query("SELECT p FROM Product p WHERE p.originalPrice BETWEEN ?1 AND ?2")
     public List<Product> findByOriginalPriceBetween(double a,double b);
+    @Query("SELECT p FROM Product p WHERE p.originalPrice BETWEEN ?1 AND ?2")
+    public Page<Product> findByOriginalPriceBetweenPage(double a,double b,Pageable pageable);
 
     @Query("SELECT p FROM Product p ORDER BY p.productname desc ")
     public List<Product>zToA();
+    @Query("SELECT p FROM Product p ORDER BY p.productname desc ")
+    public Page<Product>zToAPage(Pageable pageable);
 
     @Query("SELECT p FROM Product p ORDER BY p.productname asc ")
     public List<Product>aToZ();
+    @Query("SELECT p FROM Product p ORDER BY p.productname asc ")
+    public Page<Product>aToZPage(Pageable pageable);
 
     @Query("SELECT p FROM Product p ORDER BY p.originalPrice desc ")
     public List<Product>highPriceToLowPrice();
+    @Query("SELECT p FROM Product p ORDER BY p.originalPrice desc ")
+    public Page<Product>highPriceToLowPricePage(Pageable pageable);
 
     @Query("SELECT p FROM Product p ORDER BY p.originalPrice asc ")
     public List<Product>lowPriceToHighPrice();
+    @Query("SELECT p FROM Product p ORDER BY p.originalPrice asc ")
+    public Page<Product>lowPriceToHighPricePage(Pageable pageable);
 
     public List<Product>findByProductnameIn(List<String>productName);
 }

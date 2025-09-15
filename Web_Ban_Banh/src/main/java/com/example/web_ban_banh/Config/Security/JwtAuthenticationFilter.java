@@ -1,5 +1,6 @@
 package com.example.web_ban_banh.Config.Security;
 
+import com.example.web_ban_banh.Service.BlacklistService.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,10 +18,12 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUltil;
     private final UserDetailsService userDetailsService;
+    private TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUltil, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUltil, UserDetailsService userDetailsService,TokenBlacklistService tokenBlacklistService) {
         this.jwtUltil = jwtUltil;
         this.userDetailsService = userDetailsService;
+        this.tokenBlacklistService=tokenBlacklistService;
     }
 
     @Override
@@ -31,8 +34,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if(authHeader!=null&&authHeader.startsWith("Bearer ")){
             token = authHeader.substring(7);
+
+            // Kiểm tra token trong blacklist
+            if (tokenBlacklistService.isBlacklisted(token)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token đã bị thu hồi");
+                return; // Dừng xử lý ngay lập tức
+            }
+
             username=jwtUltil.extractUsername(token);
         }
+
 
         if(username!=null&& SecurityContextHolder.getContext().getAuthentication()==null){
             UserDetails userDetail= userDetailsService.loadUserByUsername(username);

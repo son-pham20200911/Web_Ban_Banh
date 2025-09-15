@@ -83,11 +83,9 @@ public class Product_Service implements Product_ServiceIn {
                         //Nếu không có SIZE và không có số lượng gốc thì lấy 0
                         dto.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
                     }
-
                     return dto;
                 }
         );
-
     }
 
     //Phương thức tìm sản phẩm theo ID
@@ -126,17 +124,88 @@ public class Product_Service implements Product_ServiceIn {
     //Phương thức tìm sản phẩm theo tên sản phẩm
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductDTO> findProductByProductName(String productname,Pageable pageable) {
-        Page<Product> products = productRepo.findProductByProductNamePage(productname,pageable);
+    public Page<ProductDTO> findProductByProductName(String productname, Pageable pageable) {
+        Page<Product> products = productRepo.findProductByProductNamePage(productname, pageable);
         if (products == null || products.isEmpty()) {
             throw new NotFoundExceptionCustom("Không tìm thấy Sản Phẩm " + productname + " mà bạn đang tìm");
         }
-        return products.map(product->{
-            ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+        return products.map(product -> {
+                    ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
 
+                    if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
+                        Product_size minPrice = product.getProductSizes().get(0);
+
+                        for (Product_size size : product.getProductSizes()) {
+                            if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
+                                minPrice = size;
+                            }
+                        }
+                        productDTO.setOriginalPrice(minPrice.getOriginalPrice());
+                        productDTO.setPromotionalPrice(minPrice.getPromotionalPrice());
+                    }
+                    // Lấy số lượng Sản Phẩm
+                    //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
+                    if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
+                        int totalQuantity = 0;
+                        for (Product_size sizeQuantity : product.getProductSizes()) {
+                            totalQuantity += sizeQuantity.getQuantity();
+                        }
+                        productDTO.setQuantity(totalQuantity);
+                    } else {
+                        //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
+                        //Nếu không có SIZE và không có số lượng gốc thì lấy 0
+                        productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
+                    }
+                    return productDTO;
+                }
+        );
+    }
+
+    //Phương thức tìm sản phẩm theo khoảng giá (Dùng Query Method)
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductDTO> findProductBetweenPriceImprove(double a, double b, Pageable pageable) {
+        Page<Product> products = productRepo.findByOriginalPriceBetweenPage(a, b, pageable);
+
+        return products.map(product -> {
+                    ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+                    if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
+                        Product_size minPrice = product.getProductSizes().get(0);
+                        for (Product_size size : product.getProductSizes()) {
+                            if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
+                                minPrice = size;
+                            }
+                        }
+                        productDTO.setOriginalPrice(minPrice.getOriginalPrice());
+                        productDTO.setPromotionalPrice(minPrice.getPromotionalPrice());
+                    }
+                    // Lấy số lượng Sản Phẩm
+                    //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
+                    if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
+                        int totalQuantity = 0;
+                        for (Product_size sizeQuantity : product.getProductSizes()) {
+                            totalQuantity += sizeQuantity.getQuantity();
+                        }
+                        productDTO.setQuantity(totalQuantity);
+                    } else {
+                        //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
+                        //Nếu không có SIZE và không có số lượng gốc thì lấy 0
+                        productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
+                    }
+                    return productDTO;
+                }
+        );
+    }
+
+    //Phương thức sắp xếp Tên Sản Phẩm từ Z->A
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductDTO> zToA(Pageable pageable) {
+        Page<Product> products = productRepo.zToAPage(pageable);
+        return products.map(product -> {
+            ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
                 Product_size minPrice = product.getProductSizes().get(0);
-
                 for (Product_size size : product.getProductSizes()) {
                     if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
                         minPrice = size;
@@ -159,94 +228,16 @@ public class Product_Service implements Product_ServiceIn {
                 productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
             return productDTO;
-        }
-        );
-    }
-
-
-
-    //Phương thức tìm sản phẩm theo khoảng giá (Dùng Query Method)
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProductDTO> findProductBetweenPriceImprove(double a, double b) {
-        List<Product> products = productRepo.findByOriginalPriceBetween(a, b);
-
-        List<ProductDTO> productsDTO = new ArrayList<>();
-        for (Product product : products) {
-            ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
-            if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                Product_size minPrice = product.getProductSizes().get(0);
-                for (Product_size size : product.getProductSizes()) {
-                    if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
-                        minPrice = size;
-                    }
-                }
-                productDTO.setOriginalPrice(minPrice.getOriginalPrice());
-                productDTO.setPromotionalPrice(minPrice.getPromotionalPrice());
-            }
-            // Lấy số lượng Sản Phẩm
-            //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
-            if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity = 0;
-                for (Product_size sizeQuantity : product.getProductSizes()) {
-                    totalQuantity += sizeQuantity.getQuantity();
-                }
-                productDTO.setQuantity(totalQuantity);
-            } else {
-                //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
-                //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
-            }
-            productsDTO.add(productDTO);
-        }
-        return productsDTO;
-    }
-
-    //Phương thức sắp xếp Tên Sản Phẩm từ Z->A
-    @Override
-    @Transactional(readOnly = true)
-    public List<ProductDTO> zToA() {
-        List<Product> products = productRepo.zToA();
-
-        List<ProductDTO> productDTOs = new ArrayList<>();
-        for (Product product : products) {
-            ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
-            if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                Product_size minPrice = product.getProductSizes().get(0);
-                for (Product_size size : product.getProductSizes()) {
-                    if (size.getOriginalPrice() < minPrice.getOriginalPrice()) {
-                        minPrice = size;
-                    }
-                }
-                productDTO.setOriginalPrice(minPrice.getOriginalPrice());
-                productDTO.setPromotionalPrice(minPrice.getPromotionalPrice());
-            }
-            // Lấy số lượng Sản Phẩm
-            //Nếu có SIZE thì lấy tổng số lượng Sản Phẩm của các SIZE
-            if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
-                int totalQuantity = 0;
-                for (Product_size sizeQuantity : product.getProductSizes()) {
-                    totalQuantity += sizeQuantity.getQuantity();
-                }
-                productDTO.setQuantity(totalQuantity);
-            } else {
-                //Nếu không có SIZE nhưng số lượng gốc có thì lấy số lượng gốc
-                //Nếu không có SIZE và không có số lượng gốc thì lấy 0
-                productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
-            }
-            productDTOs.add(productDTO);
-        }
-        return productDTOs;
+        });
     }
 
     //Phương thức sắp xếp Tên Sản Phẩm từ A->Z
     @Override
     @Transactional(readOnly = true)
-    public List<ProductDTO> atoZ() {
-        List<Product> products = productRepo.aToZ();
+    public Page<ProductDTO> atoZ(Pageable pageable) {
+        Page<Product> products = productRepo.aToZPage(pageable);
 
-        List<ProductDTO> productDTOs = new ArrayList<>();
-        for (Product product : products) {
+        return products.map(product -> {
             ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
                 Product_size minPrice = product.getProductSizes().get(0);
@@ -271,19 +262,16 @@ public class Product_Service implements Product_ServiceIn {
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
                 productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
-            productDTOs.add(productDTO);
-        }
-        return productDTOs;
+            return productDTO;
+        });
     }
 
     //Phương thức sắp xếp Giá Gốc từ Thấp->Cao
     @Override
     @Transactional(readOnly = true)
-    public List<ProductDTO> lowToHight() {
-        List<Product> products = productRepo.lowPriceToHighPrice();
-
-        List<ProductDTO> productsDTO = new ArrayList<>();
-        for (Product product : products) {
+    public Page<ProductDTO> lowToHight(Pageable pageable) {
+        Page<Product> products = productRepo.lowPriceToHighPricePage(pageable);
+        return products.map(product->{
             ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
                 Product_size minPrice = product.getProductSizes().get(0);
@@ -308,19 +296,18 @@ public class Product_Service implements Product_ServiceIn {
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
                 productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
-            productsDTO.add(productDTO);
-        }
-        return productsDTO;
+            return productDTO;
+        });
+
     }
 
     //Phương thức sắp xếp Giá Gốc từ Cao->Thấp
     @Override
     @Transactional(readOnly = true)
-    public List<ProductDTO> highToLow() {
-        List<Product> products = productRepo.highPriceToLowPrice();
+    public Page<ProductDTO> highToLow(Pageable pageable) {
+        Page<Product> products = productRepo.highPriceToLowPricePage(pageable);
 
-        List<ProductDTO> productsDTO = new ArrayList<>();
-        for (Product product : products) {
+        return products.map(product->{
             ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
             if (product.getProductSizes() != null && !product.getProductSizes().isEmpty()) {
                 Product_size minPrice = product.getProductSizes().get(0);
@@ -345,9 +332,8 @@ public class Product_Service implements Product_ServiceIn {
                 //Nếu không có SIZE và không có số lượng gốc thì lấy 0
                 productDTO.setQuantity(product.getQuantity() != null ? product.getQuantity() : 0);
             }
-            productsDTO.add(productDTO);
-        }
-        return productsDTO;
+            return productDTO;
+        });
     }
 
     //Phương thức Thêm Sản Phẩm

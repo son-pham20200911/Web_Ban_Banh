@@ -2,9 +2,14 @@ package com.example.web_ban_banh.Controller.Cart_Controller;
 
 import com.example.web_ban_banh.DTO.Cart_DTO.Create.Create_CartDTO;
 import com.example.web_ban_banh.DTO.Cart_DTO.Get.Cart_DTO;
+import com.example.web_ban_banh.DTO.Cart_DTO.Get.Display_Cart_DTO;
 import com.example.web_ban_banh.Service.Cart_Service.Cart_ServiceIn;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +24,35 @@ public class Cart_Controller {
     @Autowired
     public Cart_Controller(Cart_ServiceIn cartService) {
         this.cartService = cartService;
+    }
+
+    // Phương thức helper để tạo Pageable
+    private Pageable createPageable(int page, int size, String sort) {
+        if (sort != null) {
+            // sort format: "field,asc" or "field,desc"
+            String[] sortParts = sort.split(",");
+            Sort.Direction direction = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            return PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
+        }
+        return PageRequest.of(page, size);
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<?>getAllCart(@RequestParam(defaultValue = "0")int page,
+                                       @RequestParam(defaultValue = "5")int size,
+                                       @RequestParam (required = false)String soft){
+        Pageable pageable=createPageable(page,size,soft);
+        Page<Display_Cart_DTO>dtos=cartService.getAllCart(pageable);
+        if(dtos.isEmpty()){
+            return ResponseEntity.ok("Danh sách rỗng");
+        }
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?>getCartById(@PathVariable int id){
+        Display_Cart_DTO dto=cartService.findCartById(id);
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping("/{id}")

@@ -15,11 +15,11 @@ public interface Product_ServiceIn {
       public Page<ProductDTO> getAllProduct(Pageable pageable);
       public ProductDTO findProductById(int id);
       public Page<ProductDTO> findProductByProductName(String productname,Pageable pageable);
-      public List<ProductDTO> findProductBetweenPriceImprove(double a, double b);
-      public List<ProductDTO>zToA();
-      public List<ProductDTO>atoZ();
-      public List<ProductDTO>lowToHight();
-      public List<ProductDTO>highToLow();
+      public Page<ProductDTO> findProductBetweenPriceImprove(double a, double b,Pageable pageable);
+      public Page<ProductDTO>zToA(Pageable pageable);
+      public Page<ProductDTO>atoZ(Pageable pageable);
+      public Page<ProductDTO>lowToHight(Pageable pageable);
+      public Page<ProductDTO>highToLow(Pageable pageable);
 
       public ProductDTO createProduct(Create_ProductDTO dto);
 

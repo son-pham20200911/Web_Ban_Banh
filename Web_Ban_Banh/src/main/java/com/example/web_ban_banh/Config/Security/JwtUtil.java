@@ -27,6 +27,7 @@ public class JwtUtil {
 
     public String generaToken(String username){
         return Jwts.builder()
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis()+jwtExpiration))
@@ -53,5 +54,14 @@ public class JwtUtil {
         }catch(JwtException e){
             return false;
         }
+    }
+
+    public Date extractExpiration(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getsigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
     }
 }

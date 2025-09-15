@@ -14,10 +14,9 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User_DTO {
+public class UserPublic_DTO {
     private int id;
-    private String lastName;
-    private String firstName;
+    private String fullName;
     private String address;
     private Date dateOfBirth;
     private String phoneNumber;

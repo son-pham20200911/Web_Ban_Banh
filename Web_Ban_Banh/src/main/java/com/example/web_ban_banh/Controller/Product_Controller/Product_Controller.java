@@ -74,8 +74,12 @@ public class Product_Controller {
 
 
     @GetMapping("/betweenPriceImprove")
-    public ResponseEntity<?> getProductBetWeenPriceImprove(@RequestParam @Min(value = 0, message = "Giá nhỏ nhất không được bé hơn 0") double a, @RequestParam double b) {
-        List<ProductDTO> productDTOs = productService.findProductBetweenPriceImprove(a, b);
+    public ResponseEntity<?> getProductBetWeenPriceImprove(@RequestParam @Min(value = 0, message = "Giá nhỏ nhất không được bé hơn 0") double a, @RequestParam @Min(value = 0, message = "Giá nhỏ nhất không được bé hơn 0") double b,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "6") int size,
+                                                           @RequestParam(required = false) String sort) {
+        Pageable pageable=createPageable(page,size,sort);
+        Page<ProductDTO> productDTOs = productService.findProductBetweenPriceImprove(a, b,pageable);
         if (productDTOs.isEmpty()) {
             return ResponseEntity.ok("Không tìm thấy Sản Phẩm mà bạn muốn tìm");
         }
@@ -84,8 +88,11 @@ public class Product_Controller {
 
 
     @GetMapping("/ztoa")
-    public ResponseEntity<?> zToA() {
-        List<ProductDTO> productDTO = productService.zToA();
+    public ResponseEntity<?> zToA( @RequestParam(defaultValue = "0") int page,
+                                   @RequestParam(defaultValue = "6") int size,
+                                   @RequestParam(required = false) String soft) {
+        Pageable pageable=createPageable(page,size,soft);
+        Page<ProductDTO> productDTO = productService.zToA(pageable);
         if (productDTO.isEmpty()) {
             return ResponseEntity.ok("Danh sách rỗng");
         }
@@ -93,8 +100,11 @@ public class Product_Controller {
     }
 
     @GetMapping("/atoz")
-    public ResponseEntity<?> aToZ() {
-        List<ProductDTO> productDTO = productService.atoZ();
+    public ResponseEntity<?> aToZ(@RequestParam(defaultValue = "0") int page,
+                                  @RequestParam(defaultValue = "6") int size,
+                                  @RequestParam(required = false) String soft) {
+        Pageable pageable=createPageable(page,size,soft);
+        Page<ProductDTO> productDTO = productService.atoZ(pageable);
         if (productDTO.isEmpty()) {
             return ResponseEntity.ok("Danh sách rỗng");
         }
@@ -102,8 +112,11 @@ public class Product_Controller {
     }
 
     @GetMapping("/pricehightolow")
-    public ResponseEntity<?> priceHighToLow() {
-        List<ProductDTO> productsDTO = productService.highToLow();
+    public ResponseEntity<?> priceHighToLow(@RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "6") int size,
+                                            @RequestParam(required = false) String soft) {
+        Pageable pageable=createPageable(page,size,soft);
+        Page<ProductDTO> productsDTO = productService.highToLow(pageable);
         if (productsDTO.isEmpty()) {
             return ResponseEntity.ok("Danh sách rỗng");
         }
@@ -111,8 +124,11 @@ public class Product_Controller {
     }
 
     @GetMapping("/pricelowtohigh")
-    public ResponseEntity<?> priceLowToHigh() {
-        List<ProductDTO> productsDTO = productService.lowToHight();
+    public ResponseEntity<?> priceLowToHigh(@RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "6") int size,
+                                            @RequestParam(required = false) String soft) {
+        Pageable pageable=createPageable(page,size,soft);
+        Page<ProductDTO> productsDTO = productService.lowToHight(pageable);
         if (productsDTO.isEmpty()) {
             return ResponseEntity.ok("Danh sách rỗng");
         }

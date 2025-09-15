@@ -34,6 +34,7 @@ public class SecurityConfig {
                                                                                       //Vì khi xảy ra các lỗi như 500, 404 thì mặc định SpringBoot sẽ chuyển hướng đến endpoint "/error"
                                                                                       //Vậy nên ta phải để .permitAll() để endpoint "/error" không cần xác thực hay phân quyền
                                                                                       //Nếu không để như vậy thì nó sẽ auto ném ra lỗi 403
+                        .requestMatchers("/api/auth/logout").authenticated()
                         .anyRequest().authenticated()  // THÊM DÒNG NÀY: Để quy định rằng mọi request đều cần xác thực
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
