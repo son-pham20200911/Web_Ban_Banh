@@ -2,6 +2,7 @@ package com.example.web_ban_banh.Controller.Cart_Controller;
 
 import com.example.web_ban_banh.DTO.Cart_DTO.Create.Create_CartDTO;
 import com.example.web_ban_banh.DTO.Cart_DTO.Get.Cart_DTO;
+import com.example.web_ban_banh.DTO.Cart_DTO.Get.Display_Cart_All_DTO;
 import com.example.web_ban_banh.DTO.Cart_DTO.Get.Display_Cart_DTO;
 import com.example.web_ban_banh.Service.Cart_Service.Cart_ServiceIn;
 import jakarta.validation.Valid;
@@ -14,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/cart")
@@ -37,19 +40,16 @@ public class Cart_Controller {
         return PageRequest.of(page, size);
     }
 
-    @GetMapping("/")
-    public ResponseEntity<?>getAllCart(@RequestParam(defaultValue = "0")int page,
-                                       @RequestParam(defaultValue = "5")int size,
-                                       @RequestParam (required = false)String soft){
-        Pageable pageable=createPageable(page,size,soft);
-        Page<Display_Cart_DTO>dtos=cartService.getAllCart(pageable);
+    @GetMapping("/{id}")
+    public ResponseEntity<?>getAllCart(@PathVariable int id){
+        List<Display_Cart_All_DTO> dtos=cartService.getAllCartFromUser(id);
         if(dtos.isEmpty()){
-            return ResponseEntity.ok("Danh sách rỗng");
+            return ResponseEntity.ok("Danh sách giỏ hàng rỗng");
         }
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/by-id/{id}")
     public ResponseEntity<?>getCartById(@PathVariable int id){
         Display_Cart_DTO dto=cartService.findCartById(id);
         return ResponseEntity.ok(dto);

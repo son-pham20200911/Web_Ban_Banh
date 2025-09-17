@@ -16,4 +16,7 @@ public interface User_ServiceIn {
     public UserSecret_DTO updateUser(int id,RegisterUserRequest_DTO update);
 
     public void deleteUser(int id);
+
+    public void sendPasswordResetEmail(String email);
+    public void resetPassword(String token, String newPassword);
 }

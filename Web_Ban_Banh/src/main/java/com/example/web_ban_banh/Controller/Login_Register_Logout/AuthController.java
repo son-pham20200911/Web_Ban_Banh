@@ -2,6 +2,8 @@ package com.example.web_ban_banh.Controller.Login_Register_Logout;
 
 import com.example.web_ban_banh.Config.Security.JwtUtil;
 import com.example.web_ban_banh.DTO.Login_DTO.AuthRequest;
+import com.example.web_ban_banh.DTO.PasswordResetToken_DTO.ForgotPasswordRequest_DTO;
+import com.example.web_ban_banh.DTO.PasswordResetToken_DTO.ResetPasswordRequest_DTO;
 import com.example.web_ban_banh.DTO.Register_DTO.RegisterUserRequest_DTO;
 import com.example.web_ban_banh.DTO.User_DTO.Get.UserPublic_DTO;
 import com.example.web_ban_banh.Service.BlacklistService.TokenBlacklistService;
@@ -65,4 +67,23 @@ public class AuthController {
         return ResponseEntity.ok("Đăng xuất thành công. Token đã bị thu hồi.");
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest_DTO request) {
+        try {
+            userService.sendPasswordResetEmail(request.getEmail());
+            return ResponseEntity.ok("Email reset đã được gửi.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest_DTO request) {
+        try {
+            userService.resetPassword(request.getToken(), request.getNewPassword());
+            return ResponseEntity.ok("Mật khẩu đã được đặt lại thành công.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

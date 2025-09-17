@@ -7,10 +7,11 @@ import com.example.web_ban_banh.Entity.Product_size;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
+@Repository
 public interface Cart_details_RepoIn extends JpaRepository<Cart_details,Integer> {
     @Query("SELECT cd FROM Cart_details cd WHERE cd.cart.id=:cartId AND cd.product.id=:productId AND cd.productSize.id=:productSizeId")
     Optional<Cart_details>findByCartAndProductAndProductSize(@Param("cartId") int cartid,@Param("productId") int productid, @Param("productSizeId") int productSizeid);

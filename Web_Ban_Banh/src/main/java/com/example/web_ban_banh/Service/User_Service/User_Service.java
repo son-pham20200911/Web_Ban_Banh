@@ -3,35 +3,50 @@ package com.example.web_ban_banh.Service.User_Service;
 import com.example.web_ban_banh.DTO.Register_DTO.RegisterUserRequest_DTO;
 import com.example.web_ban_banh.DTO.User_DTO.Get.UserPublic_DTO;
 import com.example.web_ban_banh.DTO.User_DTO.Get.UserSecret_DTO;
+import com.example.web_ban_banh.Entity.PasswordResetToken;
 import com.example.web_ban_banh.Entity.Role;
 import com.example.web_ban_banh.Entity.User;
 import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
 import com.example.web_ban_banh.Exception.NotFoundEx_404.NotFoundExceptionCustom;
+import com.example.web_ban_banh.Repository.PasswordResetToken.PasswordResetToken_RePoIn;
 import com.example.web_ban_banh.Repository.User.User_RepoIn;
 import org.hibernate.sql.Update;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class User_Service implements User_ServiceIn {
     private User_RepoIn userRepo;
     private ModelMapper modelMapper;
     private PasswordEncoder passwordEncoder;
+    private JavaMailSender mailSender;
+    @Value("${app.password-reset.expiration}")
+    private long expiryDuration;
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+    private PasswordResetToken_RePoIn passwordResetTokenRePo;
 
     @Autowired
-    public User_Service(User_RepoIn userRepo, ModelMapper modelMapper,PasswordEncoder passwordEncoder) {
+    public User_Service(User_RepoIn userRepo, ModelMapper modelMapper,PasswordEncoder passwordEncoder,JavaMailSender mailSender,PasswordResetToken_RePoIn passwordResetTokenRePo) {
         this.userRepo = userRepo;
         this.modelMapper = modelMapper;
         this.passwordEncoder=passwordEncoder;
+        this.mailSender=mailSender;
+        this.passwordResetTokenRePo=passwordResetTokenRePo;
     }
 
     //Phương thức lấy toàn bộ User (không có Username, Password)
@@ -158,7 +173,55 @@ public class User_Service implements User_ServiceIn {
         userRepo.delete(user);
     }
 
+    @Override
+    @Transactional
+    public void sendPasswordResetEmail(String email) {
+        Optional<User> userOpt = userRepo.findByEmail(email);  // Thêm method findByEmail vào User_RepoIn nếu chưa có
+        if (userOpt.isEmpty()) {
+            throw new BadRequestExceptionCustom("Email không tồn tại");
+        }
+        User user = userOpt.get();
 
+        // Tạo token ngẫu nhiên
+        String token = UUID.randomUUID().toString();
+
+        // Tạo expiry date
+        Date expiryDate = new Date(System.currentTimeMillis() + expiryDuration);
+
+        // Lưu token
+        PasswordResetToken resetToken = new PasswordResetToken(token, expiryDate, user);
+        passwordResetTokenRePo.save(resetToken);
+
+        // Gửi email
+        String resetLink = "http://your-frontend.com/reset-password?token=" + token;  // Thay bằng URL frontend thật
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(email);
+        message.setSubject("Yêu cầu đặt lại mật khẩu");
+        message.setText("Click link để đặt lại mật khẩu: " + resetLink + "\nLink hết hạn sau 1 giờ.");
+        mailSender.send(message);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRePo.findByToken(token);
+        if (tokenOpt.isEmpty()) {
+            throw new RuntimeException("Token không hợp lệ");
+        }
+        PasswordResetToken resetToken = tokenOpt.get();
+
+        if (resetToken.isExpired()) {
+            throw new RuntimeException("Token đã hết hạn");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));  // Mã hóa password mới
+        userRepo.save(user);
+
+        // Xóa token sau khi dùng
+        passwordResetTokenRePo.delete(resetToken);
+    }
 
 
 }

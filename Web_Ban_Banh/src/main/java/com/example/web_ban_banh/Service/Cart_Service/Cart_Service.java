@@ -2,6 +2,7 @@ package com.example.web_ban_banh.Service.Cart_Service;
 
 import com.example.web_ban_banh.DTO.Cart_DTO.Create.Create_CartDTO;
 import com.example.web_ban_banh.DTO.Cart_DTO.Get.Cart_DTO;
+import com.example.web_ban_banh.DTO.Cart_DTO.Get.Display_Cart_All_DTO;
 import com.example.web_ban_banh.DTO.Cart_DTO.Get.Display_Cart_DTO;
 import com.example.web_ban_banh.DTO.Cart_Details_DTO.Get.Cart_DetailsDTO;
 import com.example.web_ban_banh.Entity.*;
@@ -222,12 +223,20 @@ public class Cart_Service implements Cart_ServiceIn {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Display_Cart_DTO> getAllCart(Pageable pageable) {
-        Page<Cart> carts = cartRepo.findAll(pageable);
-        return carts.map(cart -> {
-            Display_Cart_DTO dto = modelMapper.map(cart, Display_Cart_DTO.class);
-            return dto;
-        });
+    public List<Display_Cart_All_DTO> getAllCartFromUser(int userid) {
+        Optional<User>u=userRepo.findById(userid);
+        if(u.isEmpty()){
+            throw new BadRequestExceptionCustom("Không tìm thấy User có id"+userid);
+        }
+        User user=u.get();
+        List<Cart>carts=user.getCarts();
+        List<Display_Cart_All_DTO>dtos=new ArrayList<>();
+        for (Cart cart:carts) {
+            Display_Cart_All_DTO dto=modelMapper.map(cart,Display_Cart_All_DTO.class);
+            dtos.add(dto);
+        }
+        return dtos;
+
     }
 
     @Override
