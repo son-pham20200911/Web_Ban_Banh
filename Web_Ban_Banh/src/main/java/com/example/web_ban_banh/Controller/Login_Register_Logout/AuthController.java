@@ -71,7 +71,7 @@ public class AuthController {
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest_DTO request) {
         try {
             userService.sendPasswordResetEmail(request.getEmail());
-            return ResponseEntity.ok("Email reset đã được gửi.");
+            return ResponseEntity.ok("Email reset đã được gửi. Hãy kiểm tra Gmail của bạn.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

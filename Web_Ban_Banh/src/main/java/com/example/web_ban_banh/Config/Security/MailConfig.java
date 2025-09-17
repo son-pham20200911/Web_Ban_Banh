@@ -1,5 +1,6 @@
 package com.example.web_ban_banh.Config.Security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,15 +13,15 @@ public class MailConfig {
     @Bean
     public JavaMailSender javaMailSender(){
         JavaMailSenderImpl mailSender=new JavaMailSenderImpl();
-        mailSender.setHost("${spring.mail.host}");
+        mailSender.setHost("smtp.gmail.com");
         mailSender.setPort(587);
 
-        mailSender.setUsername("${spring.mail.username}");
-        mailSender.setPassword("${spring.mail.password}");
+        mailSender.setUsername("sonhongpham2512@gmail.com");
+        mailSender.setPassword("urrb fenc gxrb uioi");
 
         Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.smtp.auth", "${spring.mail.properties.mail.smtp.auth}");
-        props.put("mail.smtp.starttls.enable", "${spring.mail.properties.mail.smtp.starttls.enable}");
+        props.put("mail.smtp.auth", true);
+        props.put("mail.smtp.starttls.enable", true);
 
         return mailSender;
     }

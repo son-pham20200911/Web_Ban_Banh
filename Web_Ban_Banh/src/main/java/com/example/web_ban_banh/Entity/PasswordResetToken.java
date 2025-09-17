@@ -17,7 +17,7 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private Date expiryDate;  // Thời hạn hết hạn
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST,CascadeType.REFRESH},fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
