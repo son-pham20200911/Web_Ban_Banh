@@ -21,7 +21,7 @@ public class OrderDTO {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date orderDate;
     private Status status;
-    private double totalAmount;
+    private long totalAmount;
     private Discount_Code_OrderDTO discountCodes;
     private List<Order_Details_Order_DTO>orderDetails;
     private User_Order_DTO user;

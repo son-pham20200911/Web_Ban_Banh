@@ -10,8 +10,10 @@ import com.example.web_ban_banh.Service.BlacklistService.TokenBlacklistService;
 import com.example.web_ban_banh.Service.User_Service.User_ServiceIn;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -46,8 +48,15 @@ public class AuthController {
             Authentication authentication=authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword()));
             String token=jwtUltil.generaToken(request.getUsername());
             return ResponseEntity.ok(token);
-        }catch(AuthenticationException e){
-            return ResponseEntity.status(401).body(Map.of("error","Username hoặc Password không hợp lệ "));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("eror","Username hoặc Password không chính xác "+e.getMessage()));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("eror","Xác thực thất bại "+e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("eror","Lỗi hệ thống "+e.getMessage()));
         }
     }
 

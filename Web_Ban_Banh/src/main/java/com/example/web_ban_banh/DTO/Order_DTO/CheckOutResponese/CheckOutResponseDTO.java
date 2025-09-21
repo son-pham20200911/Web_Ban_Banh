@@ -16,12 +16,13 @@ public class CheckOutResponseDTO {
     private int orderId;
     private Date orderDate;
     private Status status;
-    private double totalAmount;
+    private long totalAmount;
     private Double originalPrice;
     private Double promotionalPrice;
     private double discountAmount;
     private List<Order_Details_DTO>items;
     private String deliveryAddress;
     private String paymentMethod;
+    private String paymentUrl;
     private String note;
 }

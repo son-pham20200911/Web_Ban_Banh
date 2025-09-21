@@ -13,21 +13,25 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService customUserDetailsService;
+    private CorsConfigurationSource corsConfigurationSource;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService customUserDetailsService,CorsConfigurationSource corsConfigurationSource) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.customUserDetailsService = customUserDetailsService;
+        this.corsConfigurationSource=corsConfigurationSource;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable()) // Tắt CSRF để test API
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**","/error","/images/**").permitAll() //Tại sao phải thêm "/error"
@@ -35,6 +39,8 @@ public class SecurityConfig {
                                                                                       //Vậy nên ta phải để .permitAll() để endpoint "/error" không cần xác thực hay phân quyền
                                                                                       //Nếu không để như vậy thì nó sẽ auto ném ra lỗi 403
                         .requestMatchers("/api/auth/logout").authenticated()
+                        .requestMatchers("/order/vnpay-return/**").permitAll()
+                        .requestMatchers("/order/vnpay-ipn/**").permitAll()
                         .anyRequest().authenticated()  // THÊM DÒNG NÀY: Để quy định rằng mọi request đều cần xác thực
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

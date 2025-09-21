@@ -36,12 +36,12 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token){
-        return Jwts.parserBuilder()
-                .setSigningKey(getsigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+            return Jwts.parserBuilder()
+                    .setSigningKey(getsigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
     }
 
     public boolean validateToken(String token){
@@ -57,11 +57,11 @@ public class JwtUtil {
     }
 
     public Date extractExpiration(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getsigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
+            return Jwts.parserBuilder()
+                    .setSigningKey(getsigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getExpiration();
     }
 }

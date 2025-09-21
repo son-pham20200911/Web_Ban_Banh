@@ -21,11 +21,11 @@ public class Order {
     private int id;
     @Column(name="order_date",nullable = false)
     private Date orderDate;
-    @Column(name="status",nullable = false)
+    @Column(name="status",nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private Status status;
     @Column(name="total_amount",nullable = false,columnDefinition = "DECIMAL(10,3) CHECK (total_amount >= 0)")
-    private double totalAmount;
+    private long totalAmount;
     @Column(name="original_price",nullable = false,columnDefinition ="DECIMAL(10,3) CHECK (original_price >= 0)")
     private Double originalPrice;
     @Column(name="promotional_price",nullable = false,columnDefinition = "DECIMAL(10,3) CHECK (promotional_price >= 0)")
@@ -34,6 +34,10 @@ public class Order {
     private String deliveryAddress;
     @Column(name="note",length = 500)
     private String note;
+    @Column(name="payment_method")
+    private String paymentMethod;
+    @Column(name="payment_transaction_id")
+    private String paymentTransactionId;
 
     @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.REFRESH,CascadeType.PERSIST},fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")

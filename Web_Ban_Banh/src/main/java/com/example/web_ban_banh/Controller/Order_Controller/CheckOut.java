@@ -5,7 +5,9 @@ import com.example.web_ban_banh.DTO.Order_DTO.CheckOutResponese.CheckOutResponse
 import com.example.web_ban_banh.DTO.Order_DTO.Get.OrderDTO;
 import com.example.web_ban_banh.Entity.Status;
 import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
+import com.example.web_ban_banh.Service.Order_Service.Order_Service;
 import com.example.web_ban_banh.Service.Order_Service.Order_ServicenIn;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,14 +78,78 @@ public class CheckOut {
         return ResponseEntity.ok(dto);
     }
 
+
     @PostMapping("/checkout/{id}")
-    public ResponseEntity<?>checkout(@RequestBody @Valid CheckOutRequestDTO request, @PathVariable @Min(value = 1,message = "ID phải lớn hơn 0")int id){
+    public ResponseEntity<?> checkout(@RequestBody @Valid CheckOutRequestDTO request,
+                                      @PathVariable @Min(value = 1, message = "ID phải lớn hơn 0") int id,
+                                      HttpServletRequest httpServletRequest) {
         try {
-            CheckOutResponseDTO dto=orderService.processCheckout(id,request);
-            return ResponseEntity.ok(Map.of("message","Đơn hàng được tạo thành công",
-                                            "Thông tin đơn hàng",dto));
-        }catch(Exception e){
-            throw new BadRequestExceptionCustom("Không thể tạo đơn hàng. Vui lòng thử lại sau. "+e.getMessage());
+            CheckOutResponseDTO dto = orderService.processCheckout(id, request,httpServletRequest);
+            if ("VNPAY".equalsIgnoreCase(request.getPaymentMethod())) {
+                // Frontend sẽ redirect đến dto.getPaymentUrl()
+                return ResponseEntity.ok(Map.of(
+                        "message", "Tạo đơn hàng thành công. Chuyển hướng đến VNPay...",
+                        "orderInfo", dto,
+                        "paymentUrl", dto.getPaymentUrl()
+                ));
+            } else {
+                // COD như cũ
+                return ResponseEntity.ok(Map.of(
+                        "message", "Đơn hàng được tạo thành công",
+                        "orderInfo", dto
+                ));
+            }
+        } catch (Exception e) {
+            throw new BadRequestExceptionCustom("Không thể tạo đơn hàng. Vui lòng thử lại sau. " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/vnpay-return")
+    public ResponseEntity<?> vnpayReturn(@RequestParam Map<String, String> params) {
+        try {
+            System.out.println("=== VNPay Return Endpoint Hit ===");
+            System.out.println("Parameters received: " + params.size());
+
+            orderService.handleVNPayCallback(params, true);
+
+            String orderIdStr = params.get("vnp_TxnRef");
+            String responseCode = params.get("vnp_ResponseCode");
+
+            if ("00".equals(responseCode)) {
+                return ResponseEntity.ok(Map.of(
+                        "status", "success",
+                        "message", "Thanh toán thành công",
+                        "orderId", orderIdStr != null ? orderIdStr : "N/A"
+                ));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                        "status", "failed",
+                        "message", "Thanh toán thất bại - Mã lỗi: " + responseCode,
+                        "orderId", orderIdStr != null ? orderIdStr : "N/A",
+                        "responseCode", responseCode != null ? responseCode : "Unknown"
+                ));
+            }
+        } catch (Exception e) {
+            System.err.println("=== Error in vnpay-return endpoint ===");
+            System.err.println("Error message: " + e.getMessage());
+            e.printStackTrace();
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "error",
+                    "message", e.getMessage(),
+                    "orderId", params.get("vnp_TxnRef") != null ? params.get("vnp_TxnRef") : "N/A"
+            ));
+        }
+    }
+
+    // Endpoint cho VNPay IPN (server-to-server, optional - dùng để confirm payment)
+    @PostMapping("/vnpay-ipn")
+    public ResponseEntity<?> vnpayIpn(@RequestBody Map<String, String> params) {
+        try {
+            orderService.handleVNPayCallback(params, false);  // false = ipn
+            return ResponseEntity.ok("OK");  // VNPay expect "OK" response
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("ERROR");
         }
     }
 

@@ -1,14 +1,18 @@
 package com.example.web_ban_banh.Service.Cart_Details_Service;
 
+import com.example.web_ban_banh.DTO.Cart_Details_DTO.Get.Cart_Details_Display_DTO;
+import com.example.web_ban_banh.DTO.Cart_Details_DTO.Update.UpdateCartDetaisl_DTO;
 import com.example.web_ban_banh.Entity.Cart;
 import com.example.web_ban_banh.Entity.Cart_details;
 import com.example.web_ban_banh.Entity.Product;
 import com.example.web_ban_banh.Entity.Product_size;
+import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
 import com.example.web_ban_banh.Exception.NotFoundEx_404.NotFoundExceptionCustom;
 import com.example.web_ban_banh.Repository.Cart.Cart_RepoIn;
 import com.example.web_ban_banh.Repository.Cart_details.Cart_details_RepoIn;
 import com.example.web_ban_banh.Repository.Product.Product_RepoIn;
 import com.example.web_ban_banh.Repository.Product_size.Product_size_RepoIn;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +25,42 @@ public class Cart_Details_Service implements Cart_Details_ServiceIn {
     private Cart_RepoIn cartRepo;
     private Product_RepoIn productRepo;
     private Product_size_RepoIn productSizeRepo;
+    private ModelMapper modelMapper;
 
     @Autowired
-    public Cart_Details_Service(Cart_details_RepoIn cartDetailsRepo, Cart_RepoIn cartRepo,Product_RepoIn productRepo,Product_size_RepoIn productSizeRepo) {
+    public Cart_Details_Service(Cart_details_RepoIn cartDetailsRepo, Cart_RepoIn cartRepo,Product_RepoIn productRepo,Product_size_RepoIn productSizeRepo,ModelMapper modelMapper) {
         this.cartDetailsRepo = cartDetailsRepo;
         this.cartRepo = cartRepo;
         this.productRepo=productRepo;
         this.productSizeRepo=productSizeRepo;
+        this.modelMapper=modelMapper;
     }
 
+    @Override
+    @Transactional
+    public Cart_Details_Display_DTO updateCartDetails(int id,UpdateCartDetaisl_DTO update) {
+        Optional<Cart_details> cd=cartDetailsRepo.findById(id);
+        if(cd.isEmpty()){
+            throw new NotFoundExceptionCustom("Không tìm thấy chi tiết giỏ hàng có id "+id);
+        }
+        Cart_details cartDetails=cd.get();
+        int stock=0;
+        if(cartDetails.getProductSize()!=null && cartDetails.getProductSize().getQuantity()!=0){
+            stock=cartDetails.getProductSize().getQuantity();
+        }else if(cartDetails.getProduct().getQuantity()!=null){
+            stock=cartDetails.getProduct().getQuantity();
+        }else{
+            stock=0;
+        }
+        if(stock< update.getProductQuantity()){
+            throw new BadRequestExceptionCustom("Số lượng hàng bạn yêu cầu đang lớn hơn số lượng hàng trong kho");
+        }
+        cartDetails.setProductQuantity(update.getProductQuantity());
+        Cart_details updated= cartDetailsRepo.saveAndFlush(cartDetails);
+
+        Cart_Details_Display_DTO dto=modelMapper.map(updated,Cart_Details_Display_DTO.class);
+        return dto;
+    }
 
     @Override
     @Transactional
