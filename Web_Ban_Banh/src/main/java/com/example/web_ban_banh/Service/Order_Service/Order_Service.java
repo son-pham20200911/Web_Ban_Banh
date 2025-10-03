@@ -4,6 +4,7 @@ import com.example.web_ban_banh.DTO.Order_DTO.CheckOutRequest.CheckOutRequestDTO
 import com.example.web_ban_banh.DTO.Order_DTO.CheckOutResponese.CheckOutResponseDTO;
 import com.example.web_ban_banh.DTO.Order_DTO.Get.OrderDTO;
 import com.example.web_ban_banh.DTO.Order_Detail_DTO.Get.Order_Details_DTO;
+import com.example.web_ban_banh.DTO.User_DTO.Get.UserSecret_DTO;
 import com.example.web_ban_banh.Entity.*;
 import com.example.web_ban_banh.Exception.BadRequestEx_400.BadRequestExceptionCustom;
 import com.example.web_ban_banh.Exception.Internal_Server_ErrorEX_500.InternalServerErrorExceptionCustom;
@@ -102,6 +103,7 @@ public class Order_Service implements Order_ServicenIn {
             throw new NotFoundExceptionCustom("Không tim thấy User có Id: " + userId);
         }
         User user = u.get();
+        UserSecret_DTO userDTO=modelMapper.map(user,UserSecret_DTO.class);
 
         //Kiểm tra cart có tồn tại không
         Optional<Cart> c = cartRepo.findById(request.getCartId());
@@ -222,6 +224,7 @@ public class Order_Service implements Order_ServicenIn {
         respone.setDeliveryAddress(request.getDeliveryAddress());
         respone.setPaymentMethod(request.getPaymentMethod());
         respone.setNote(request.getNote());
+        respone.setUser(userDTO);
 
         // Nếu là VNPAY, generate payment URL
         if ("VNPAY".equalsIgnoreCase(request.getPaymentMethod())) {
@@ -333,71 +336,6 @@ public class Order_Service implements Order_ServicenIn {
         }
     }
 
-
-//    @Transactional
-//    public void handleVNPayCallback(Map<String, String> params, boolean isReturnUrl) {
-//        System.out.println("=== VNPay Callback Handler ===");
-//
-//        // In ra tất cả parameters
-//        System.out.println("=== All Parameters ===");
-//        for (Map.Entry<String, String> entry : params.entrySet()) {
-//            System.out.println(entry.getKey() + "=" + entry.getValue());
-//        }
-//
-//        // Lấy secure hash từ VNPay
-//        String vnp_SecureHash = params.get("vnp_SecureHash");
-//        System.out.println("Received Hash: " + vnp_SecureHash);
-//
-//        // Tạo Map để verify - loại bỏ vnp_SecureHash
-//        Map<String, String> verifyParams = new HashMap<>();
-//        for (Map.Entry<String, String> entry : params.entrySet()) {
-//            String key = entry.getKey();
-//            String value = entry.getValue();
-//
-//            if (!"vnp_SecureHash".equals(key) &&
-//                    !"vnp_SecureHashType".equals(key) &&
-//                    value != null && !value.trim().isEmpty()) {
-//                verifyParams.put(key, value);
-//            }
-//        }
-//
-//        // Sử dụng method hashAllFields giống code mẫu
-//        String calculatedHash = hashAllFields(verifyParams);
-//        System.out.println("Calculated Hash: " + calculatedHash);
-//        System.out.println("Hash Match: " + calculatedHash.equalsIgnoreCase(vnp_SecureHash));
-//
-//        // Verify signature
-//        if (!calculatedHash.equalsIgnoreCase(vnp_SecureHash)) {
-//            System.err.println("HASH VERIFICATION FAILED!");
-//            throw new BadRequestExceptionCustom("Chữ ký không hợp lệ!");
-//        }
-//
-//        // Xử lý order status
-//        String orderIdStr = params.get("vnp_TxnRef");
-//        if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
-//            throw new BadRequestExceptionCustom("Không tìm thấy Order ID");
-//        }
-//
-//        int orderId = Integer.parseInt(orderIdStr.trim());
-//        Optional<Order> orderOpt = orderRepo.findById(orderId);
-//        if (orderOpt.isEmpty()) {
-//            throw new NotFoundExceptionCustom("Không tìm thấy Order " + orderId);
-//        }
-//
-//        Order order = orderOpt.get();
-//        String responseCode = params.get("vnp_ResponseCode");
-//
-//        if ("00".equals(responseCode)) {
-//            order.setStatus(Status.PAID);
-//            order.setPaymentTransactionId(params.get("vnp_TransactionNo"));
-//            System.out.println("Payment successful for Order: " + orderId);
-//        } else {
-//            order.setStatus(Status.FAILED);
-//            System.out.println("Payment failed for Order: " + orderId);
-//        }
-//
-//        orderRepo.save(order);
-//    }
 
     // 2. METHOD XỬ LÝ CALLBACK VỚI URL DECODE
     @Transactional

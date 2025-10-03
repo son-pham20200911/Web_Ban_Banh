@@ -10,6 +10,7 @@ public interface User_ServiceIn {
     public Page<UserSecret_DTO>getAllUser(Pageable pageable);
     public UserPublic_DTO findById(int id);
     public Page<UserSecret_DTO> findByFullName(String fullName, Pageable pageable);
+    public UserPublic_DTO findByUsername(String username);
 
     public UserPublic_DTO register(RegisterUserRequest_DTO request);
 

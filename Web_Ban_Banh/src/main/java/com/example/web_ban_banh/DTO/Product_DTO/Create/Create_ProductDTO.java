@@ -42,5 +42,7 @@ public class Create_ProductDTO {
 
     private List<String> product_size;
     private String category;
+
+    @NotNull(message = "Hãy tải file ảnh trong máy của bạn lên")
     private MultipartFile img;
 }

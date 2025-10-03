@@ -139,7 +139,7 @@ public class Cart_Service implements Cart_ServiceIn {
 
 
         // 4) Gộp dòng nếu đã tồn tại (cart, product, size)
-        // Check xem CartDetail đã tồn tại trong Cart chưa
+        // Check xem có CartDetail naò có cùng trong Cart, cùng sản phẩm, cùng kích thước sản phẩm đã tồn tại trong Cart chưa
         Cart_details item;
         if (productSize != null) {
             item = cartDetailRepo.findByCartAndProductAndProductSize(cart.getId(), product.getId(), productSize.getId()).orElse(null);

@@ -110,7 +110,7 @@ public class CheckOut {
             System.out.println("=== VNPay Return Endpoint Hit ===");
             System.out.println("Parameters received: " + params.size());
 
-            orderService.handleVNPayCallback(params, true);
+            orderService.handleVNPayCallback(params, true); // true = đây là return URL
 
             String orderIdStr = params.get("vnp_TxnRef");
             String responseCode = params.get("vnp_ResponseCode");
@@ -146,7 +146,7 @@ public class CheckOut {
     @PostMapping("/vnpay-ipn")
     public ResponseEntity<?> vnpayIpn(@RequestBody Map<String, String> params) {
         try {
-            orderService.handleVNPayCallback(params, false);  // false = ipn
+            orderService.handleVNPayCallback(params, false);  // false = đây là ipn
             return ResponseEntity.ok("OK");  // VNPay expect "OK" response
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("ERROR");

@@ -82,7 +82,17 @@ public class User_Service implements User_ServiceIn {
             UserSecret_DTO dto=modelMapper.map(user,UserSecret_DTO.class);
             return dto;
         });
+    }
 
+    @Override
+    public UserPublic_DTO findByUsername(String username) {
+        Optional<User> userOpt=userRepo.findByUserName(username);
+        if(userOpt.isPresent()){
+            User user=userOpt.get();
+            UserPublic_DTO dto=modelMapper.map(user,UserPublic_DTO.class);
+            return dto;
+        }
+        return null;
     }
 
     //Đăng ký
@@ -173,6 +183,7 @@ public class User_Service implements User_ServiceIn {
         userRepo.delete(user);
     }
 
+    //Quên mật khẩu
     @Override
     @Transactional
     public void sendPasswordResetEmail(String email) {
@@ -195,8 +206,8 @@ public class User_Service implements User_ServiceIn {
         // Gửi email
         String resetLink = "http://your-frontend.com/reset-password?token=" + token;  // Thay bằng URL frontend thật
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(email);
+        message.setFrom(fromEmail); // Gửi từ đâu (email của bạn)
+        message.setTo(email);       // Gửi đến đâu(email mà User nhập vào)
         message.setSubject("Yêu cầu đặt lại mật khẩu");
         message.setText("Click link để đặt lại mật khẩu: " + resetLink + "\nLink hết hạn sau 1 giờ.");
         mailSender.send(message);
@@ -207,12 +218,12 @@ public class User_Service implements User_ServiceIn {
     public void resetPassword(String token, String newPassword) {
         Optional<PasswordResetToken> tokenOpt = passwordResetTokenRePo.findByToken(token);
         if (tokenOpt.isEmpty()) {
-            throw new RuntimeException("Token không hợp lệ");
+            throw new BadRequestExceptionCustom("Token không hợp lệ");
         }
         PasswordResetToken resetToken = tokenOpt.get();
 
         if (resetToken.isExpired()) {
-            throw new RuntimeException("Token đã hết hạn");
+            throw new BadRequestExceptionCustom("Token đã hết hạn");
         }
 
         User user = resetToken.getUser();

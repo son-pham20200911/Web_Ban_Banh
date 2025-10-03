@@ -3,6 +3,7 @@ package com.example.web_ban_banh.Config.Security;
 import com.example.web_ban_banh.Custom.CustomSecurity.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -41,6 +42,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/logout").authenticated()
                         .requestMatchers("/order/vnpay-return/**").permitAll()
                         .requestMatchers("/order/vnpay-ipn/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET,"/user/{id}").hasAnyRole("USER","ADMIN")
+                        .requestMatchers(HttpMethod.PUT,"/user/{id}").hasAnyRole("USER","ADMIN")
+                        .requestMatchers("/user/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET,"/category/").hasAnyRole("USER","ADMIN")
+                        .requestMatchers("/category/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST,"/product/").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,"/product/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE,"/product/{id}").hasRole("ADMIN")
+
                         .anyRequest().authenticated()  // THÊM DÒNG NÀY: Để quy định rằng mọi request đều cần xác thực
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
